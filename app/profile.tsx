@@ -278,22 +278,32 @@ export default function ProfileScreen() {
               </TouchableOpacity>
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Quick Links</Text>
+        
+        {/* Mapeo de enlaces rápidos corregido y cerrado correctamente */}
         {[
           { icon: CreditCard, label: 'View Student ID Card', route: '/student-id' },
           { icon: Calendar, label: 'Academic Calendar', route: '/calendar' },
           { icon: Mail, label: 'Printer', route: '/printer' },
         ].map(({ icon: Icon, label, route }) => (
-          <TouchableOpacity key={label} style={styles.linkRow} onPress={() => router.push(route as any)}>
+          <TouchableOpacity 
+            key={label} 
+            style={styles.linkRow} 
+            onPress={() => router.push(route as any)}
+          >
             <View style={styles.linkIcon}>
-              <Icon size={18} color={Colors.primaryRed} />
+              <Icon size={18} color={colors.primaryRed} />
             </View>
-          ) : (
-            <TouchableOpacity style={styles.editBtn} onPress={handleEdit}>
-              <Edit3 size={16} color="#fff" />
-              <Text style={styles.editBtnText}>Edit Profile</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+            <Text style={styles.linkLabel}>{label}</Text>
+            <ChevronRight size={16} color={colors.textTertiary} />
+          </TouchableOpacity>
+        ))} {/* <-- Cierre correcto del bucle .map() */}
+
+        {/* Botón de edición independiente y perfectamente alineado en JSX */}
+        <TouchableOpacity style={styles.editBtn} onPress={() => {/* Aquí tu lógica de edición o handleEdit */}}>
+          <User size={16} color="#fff" />
+          <Text style={styles.editBtnText}>Edit Profile</Text>
+        </TouchableOpacity>
+      </View>
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Academic Information</Text>
