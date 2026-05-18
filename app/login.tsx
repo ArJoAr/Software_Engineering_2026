@@ -206,7 +206,7 @@ export default function LoginScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            <TouchableOpacity style={styles.helpButton} activeOpacity={0.7}>
+            <TouchableOpacity style={styles.helpButton} activeOpacity={0.7} onPress={() => router.push('/printer')}>
               <Text style={styles.helpButtonText}>Need help signing in?</Text>
             </TouchableOpacity>
           </View>

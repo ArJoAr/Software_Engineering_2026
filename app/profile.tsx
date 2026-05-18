@@ -87,6 +87,7 @@ export default function ProfileScreen() {
         {[
           { icon: CreditCard, label: 'View Student ID Card', route: '/student-id' },
           { icon: Calendar, label: 'Academic Calendar', route: '/calendar' },
+          { icon: Mail, label: 'Printer', route: '/printer' },
         ].map(({ icon: Icon, label, route }) => (
           <TouchableOpacity key={label} style={styles.linkRow} onPress={() => router.push(route as any)}>
             <View style={styles.linkIcon}>
