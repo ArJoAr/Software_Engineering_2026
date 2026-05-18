@@ -16,6 +16,7 @@ import {
   Library,
   Calendar,
   Gift,
+  Menu,
   ChevronRight,
   Bell,
   Ticket,
