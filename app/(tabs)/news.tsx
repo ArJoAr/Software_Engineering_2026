@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,9 +9,11 @@ import {
 } from 'react-native';
 import { ExternalLink, Clock } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
 import { MOCK_NEWS } from '@/constants/mockData';
 
-function NewsCard({ item }: { item: (typeof MOCK_NEWS)[0] }) {
+function NewsCard({ item, colors }: { item: (typeof MOCK_NEWS)[0]; colors: typeof Colors }) {
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const dateObj = new Date(item.date);
   const formattedDate = dateObj.toLocaleDateString('en-US', {
     month: 'short',
@@ -30,7 +32,7 @@ function NewsCard({ item }: { item: (typeof MOCK_NEWS)[0] }) {
             <Text style={styles.categoryText}>{item.category}</Text>
           </View>
           <View style={styles.dateRow}>
-            <Clock size={11} color={Colors.textTertiary} />
+            <Clock size={11} color={colors.textTertiary} />
             <Text style={styles.dateText}>{formattedDate}</Text>
           </View>
         </View>
@@ -38,7 +40,7 @@ function NewsCard({ item }: { item: (typeof MOCK_NEWS)[0] }) {
         <Text style={styles.newsSummary} numberOfLines={3}>{item.summary}</Text>
         <View style={styles.sourceRow}>
           <Text style={styles.source}>{item.source}</Text>
-          <ExternalLink size={13} color={Colors.primaryRed} />
+          <ExternalLink size={13} color={colors.primaryRed} />
         </View>
       </View>
     </TouchableOpacity>
@@ -46,6 +48,9 @@ function NewsCard({ item }: { item: (typeof MOCK_NEWS)[0] }) {
 }
 
 export default function NewsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   return (
     <ScrollView
       style={styles.container}
@@ -59,13 +64,13 @@ export default function NewsScreen() {
 
       <View style={styles.featuredSection}>
         <Text style={styles.sectionLabel}>Featured</Text>
-        <NewsCard item={MOCK_NEWS[0]} />
+        <NewsCard item={MOCK_NEWS[0]} colors={colors} />
       </View>
 
       <View style={styles.listSection}>
         <Text style={styles.sectionLabel}>Recent News</Text>
         {MOCK_NEWS.slice(1).map((item) => (
-          <NewsCard key={item.id} item={item} />
+          <NewsCard key={item.id} item={item} colors={colors} />
         ))}
       </View>
 
@@ -78,11 +83,11 @@ export default function NewsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: typeof Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: 32 },
   header: {
-    backgroundColor: Colors.primaryRed,
+    backgroundColor: colors.primaryRed,
     paddingTop: 56,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -95,14 +100,14 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: Colors.textTertiary,
+    color: colors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     marginBottom: 12,
   },
 
   newsCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 14,
@@ -116,28 +121,28 @@ const styles = StyleSheet.create({
   newsBody: { padding: 14 },
   newsTopRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   categoryPill: {
-    backgroundColor: Colors.primaryRedLight,
+    backgroundColor: colors.primaryRedLight,
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 20,
   },
-  categoryText: { fontSize: 11, fontWeight: '700', color: Colors.primaryRed, textTransform: 'uppercase', letterSpacing: 0.4 },
+  categoryText: { fontSize: 11, fontWeight: '700', color: colors.primaryRed, textTransform: 'uppercase', letterSpacing: 0.4 },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  dateText: { fontSize: 12, color: Colors.textTertiary },
-  newsTitle: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary, marginBottom: 6, lineHeight: 21 },
-  newsSummary: { fontSize: 13, color: Colors.textSecondary, lineHeight: 19, marginBottom: 12 },
+  dateText: { fontSize: 12, color: colors.textTertiary },
+  newsTitle: { fontSize: 15, fontWeight: '700', color: colors.textPrimary, marginBottom: 6, lineHeight: 21 },
+  newsSummary: { fontSize: 13, color: colors.textSecondary, lineHeight: 19, marginBottom: 12 },
   sourceRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  source: { fontSize: 12, fontWeight: '600', color: Colors.primaryRed },
+  source: { fontSize: 12, fontWeight: '600', color: colors.primaryRed },
 
   footer: { padding: 20 },
   loadMore: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: 12,
     height: 46,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: Colors.cardBorder,
+    borderColor: colors.cardBorder,
   },
-  loadMoreText: { fontSize: 14, fontWeight: '600', color: Colors.textSecondary },
+  loadMoreText: { fontSize: 14, fontWeight: '600', color: colors.textSecondary },
 });

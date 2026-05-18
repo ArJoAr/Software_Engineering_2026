@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -22,73 +22,28 @@ import {
   Ticket,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { QuickAccessCard } from '@/components/QuickAccessCard';
 import { MOCK_EVENTS } from '@/constants/mockData';
 import { EventCard } from '@/components/EventCard';
 
 const QUICK_ACCESS = [
-  {
-    id: 'student-id',
-    title: 'My Student ID',
-    icon: CreditCard,
-    route: '/student-id',
-    color: Colors.primaryRed,
-  },
-  {
-    id: 'calendar',
-    title: 'My Calendar',
-    icon: CalendarDays,
-    route: '/calendar',
-    color: Colors.info,
-  },
-  {
-    id: 'campus-global',
-    title: 'Campus Global',
-    icon: Globe,
-    route: '/academic',
-    color: Colors.categoryColors.conference,
-  },
-  {
-    id: 'aula-global',
-    title: 'Aula Global',
-    icon: BookOpen,
-    route: '/academic',
-    color: Colors.academic,
-  },
-  {
-    id: 'library',
-    title: 'My Library Account',
-    icon: Library,
-    route: '/academic',
-    color: Colors.success,
-  },
-  {
-    id: 'agenda',
-    title: 'Agenda',
-    icon: Calendar,
-    route: '/calendar',
-    color: Colors.categoryColors.culture,
-  },
-  {
-    id: 'benefits',
-    title: 'UPF Benefits',
-    icon: Gift,
-    route: '/highlights',
-    color: Colors.warning,
-  },
-  {
-    id: 'events',
-    title: 'Campus Events',
-    icon: Ticket,
-    route: '/events',
-    color: Colors.categoryColors.events,
-  },
+  { id: 'student-id', title: 'My Student ID', icon: CreditCard, route: '/student-id', color: Colors.primaryRed },
+  { id: 'calendar', title: 'My Calendar', icon: CalendarDays, route: '/calendar', color: Colors.info },
+  { id: 'campus-global', title: 'Campus Global', icon: Globe, route: '/academic', color: Colors.categoryColors.conference },
+  { id: 'aula-global', title: 'Aula Global', icon: BookOpen, route: '/academic', color: Colors.academic },
+  { id: 'library', title: 'My Library Account', icon: Library, route: '/academic', color: Colors.success },
+  { id: 'agenda', title: 'Agenda', icon: Calendar, route: '/calendar', color: Colors.categoryColors.culture },
+  { id: 'benefits', title: 'UPF Benefits', icon: Gift, route: '/highlights', color: Colors.warning },
+  { id: 'events', title: 'Campus Events', icon: Ticket, route: '/events', color: Colors.categoryColors.events },
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
   const { student } = useAuth();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const featuredEvents = MOCK_EVENTS.slice(0, 3);
 
@@ -120,17 +75,14 @@ export default function HomeScreen() {
               <Bell size={20} color="#fff" />
               <View style={styles.bellDot} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIcon} onPress={() => router.push('/menu')}>
+            <TouchableOpacity style={styles.headerIcon} onPress={() => router.push('/menu' as any)}>
               <Menu size={20} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
 
         <TouchableOpacity style={styles.welcomeCard} onPress={() => router.push('/profile')} activeOpacity={0.85}>
-          <Image
-            source={{ uri: student?.photoUrl }}
-            style={styles.avatar}
-          />
+          <Image source={{ uri: student?.photoUrl }} style={styles.avatar} />
           <View style={styles.welcomeText}>
             <Text style={styles.welcomeGreet}>Hello, {student?.firstName ?? 'Student'}</Text>
             <Text style={styles.welcomeRole}>{student?.role} · {student?.degree?.split(' ').slice(0, 3).join(' ')}</Text>
@@ -180,12 +132,12 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: typeof Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: 20 },
 
   header: {
-    backgroundColor: Colors.primaryRed,
+    backgroundColor: colors.primaryRed,
     paddingTop: 56,
     paddingBottom: 24,
     paddingHorizontal: 20,
@@ -229,7 +181,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#FFD700',
     borderWidth: 1,
-    borderColor: Colors.primaryRed,
+    borderColor: colors.primaryRed,
   },
 
   welcomeCard: {
@@ -256,8 +208,8 @@ const styles = StyleSheet.create({
 
   section: { padding: 20, paddingBottom: 0 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  sectionTitle: { fontSize: 17, fontWeight: '700', color: Colors.textPrimary, marginBottom: 14 },
-  sectionLink: { fontSize: 14, color: Colors.primaryRed, fontWeight: '600' },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary, marginBottom: 14 },
+  sectionLink: { fontSize: 14, color: colors.primaryRed, fontWeight: '600' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   gridItem: { width: '47%' },
   bottomPad: { height: 20 },

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,7 @@ import {
   Clock,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 
 const ACADEMIC_TOOLS = [
@@ -42,6 +43,8 @@ const COURSES = [
 
 export default function AcademicScreen() {
   const { student } = useAuth();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const avg = COURSES.filter((c) => c.grade !== null).reduce((acc, c) => acc + (c.grade ?? 0), 0) / COURSES.filter((c) => c.grade !== null).length;
 
@@ -95,14 +98,14 @@ export default function AcademicScreen() {
           <TouchableOpacity key={course.code} style={styles.courseCard} activeOpacity={0.8}>
             <View style={styles.courseLeft}>
               <View style={styles.courseIcon}>
-                <BookOpen size={18} color={Colors.academic} />
+                <BookOpen size={18} color={colors.academic} />
               </View>
               <View style={styles.courseInfo}>
                 <Text style={styles.courseName}>{course.name}</Text>
                 <Text style={styles.courseCode}>{course.code}</Text>
                 <Text style={styles.courseProfessor}>{course.professor}</Text>
                 <View style={styles.courseMetaRow}>
-                  <Clock size={11} color={Colors.textTertiary} />
+                  <Clock size={11} color={colors.textTertiary} />
                   <Text style={styles.courseMeta}>{course.schedule}</Text>
                 </View>
                 <Text style={styles.courseRoom}>Room {course.room}</Text>
@@ -117,7 +120,7 @@ export default function AcademicScreen() {
               ) : (
                 <Text style={styles.gradeNA}>–</Text>
               )}
-              <ChevronRight size={16} color={Colors.textTertiary} />
+              <ChevronRight size={16} color={colors.textTertiary} />
             </View>
           </TouchableOpacity>
         ))}
@@ -128,11 +131,11 @@ export default function AcademicScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: typeof Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: 24 },
   header: {
-    backgroundColor: Colors.primaryRed,
+    backgroundColor: colors.primaryRed,
     paddingTop: 56,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -145,28 +148,30 @@ const styles = StyleSheet.create({
 
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: Colors.primaryRedDark,
+    backgroundColor: colors.primaryRedDark,
     paddingHorizontal: 20,
     paddingBottom: 20,
     paddingTop: 4,
-    gap: 0,
   },
   statBox: {
-    flex: 1, alignItems: 'center',
+    flex: 1,
+    alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 12, paddingVertical: 14, marginHorizontal: 4,
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginHorizontal: 4,
   },
   statBoxMid: { borderLeftWidth: 1, borderRightWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
   statValue: { fontSize: 20, fontWeight: '800', color: '#fff' },
   statLabel: { fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: '600', marginTop: 2 },
 
   section: { padding: 20, paddingBottom: 0 },
-  sectionTitle: { fontSize: 17, fontWeight: '700', color: Colors.textPrimary, marginBottom: 14 },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary, marginBottom: 14 },
 
   toolsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   toolCard: {
     width: '47.5%',
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: 14,
     padding: 14,
     shadowColor: '#000',
@@ -177,11 +182,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   toolIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  toolLabel: { fontSize: 13, fontWeight: '700', color: Colors.textPrimary, marginBottom: 2 },
-  toolDesc: { fontSize: 11, color: Colors.textTertiary, lineHeight: 15 },
+  toolLabel: { fontSize: 13, fontWeight: '700', color: colors.textPrimary, marginBottom: 2 },
+  toolDesc: { fontSize: 11, color: colors.textTertiary, lineHeight: 15 },
 
   courseCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: 14,
     padding: 14,
     flexDirection: 'row',
@@ -197,19 +202,19 @@ const styles = StyleSheet.create({
   courseLeft: { flexDirection: 'row', flex: 1, gap: 12 },
   courseIcon: {
     width: 40, height: 40, borderRadius: 12,
-    backgroundColor: Colors.academicLight,
+    backgroundColor: colors.academicLight,
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   courseInfo: { flex: 1 },
-  courseName: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary, marginBottom: 2 },
-  courseCode: { fontSize: 11, color: Colors.textTertiary, fontWeight: '600', letterSpacing: 0.3, marginBottom: 3 },
-  courseProfessor: { fontSize: 12, color: Colors.textSecondary, marginBottom: 4 },
+  courseName: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 2 },
+  courseCode: { fontSize: 11, color: colors.textTertiary, fontWeight: '600', letterSpacing: 0.3, marginBottom: 3 },
+  courseProfessor: { fontSize: 12, color: colors.textSecondary, marginBottom: 4 },
   courseMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
-  courseMeta: { fontSize: 11, color: Colors.textTertiary },
-  courseRoom: { fontSize: 11, color: Colors.textTertiary },
+  courseMeta: { fontSize: 11, color: colors.textTertiary },
+  courseRoom: { fontSize: 11, color: colors.textTertiary },
   courseRight: { alignItems: 'center', gap: 6, paddingLeft: 8 },
   gradeBadge: { alignItems: 'center' },
-  gradeValue: { fontSize: 18, fontWeight: '800', color: Colors.primaryRed },
-  gradeLabel: { fontSize: 10, color: Colors.textTertiary },
-  gradeNA: { fontSize: 18, fontWeight: '400', color: Colors.textTertiary },
+  gradeValue: { fontSize: 18, fontWeight: '800', color: colors.primaryRed },
+  gradeLabel: { fontSize: 10, color: colors.textTertiary },
+  gradeNA: { fontSize: 18, fontWeight: '400', color: colors.textTertiary },
 });
