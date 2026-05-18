@@ -18,10 +18,10 @@ import {
   CreditCard,
   LogOut,
   ChevronRight,
-  MapPin,
   User,
   Moon,
 } from 'lucide-react-native';
+
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -29,6 +29,8 @@ import { useTheme } from '@/context/ThemeContext';
 export default function ProfileScreen() {
   const router = useRouter();
   const { student, logout } = useAuth();
+  
+  // Mantenemos el sistema de temas dinámico de la rama MAIN
   const { colors, isDark, toggleTheme } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -37,41 +39,48 @@ export default function ProfileScreen() {
     router.replace('/login');
   };
 
+  // Mantenemos tus tipos seguros de la rama FEATURE
   const infoRows = [
     { icon: User, label: 'Student ID', value: student?.studentIdNumber },
     { icon: Mail, label: 'Institutional Email', value: student?.email },
     { icon: GraduationCap, label: 'Degree', value: student?.degree },
     { icon: Building, label: 'Faculty', value: student?.faculty },
-    { icon: Calendar, label: 'Year', value: `Year ${student?.year}` },
-    { icon: MapPin, label: 'Campus', value: student?.campus },
-    { icon: Calendar, label: 'Enrolled Since', value: student?.enrollmentDate },
   ];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} bounces={false} contentContainerStyle={styles.content}>
+      {/* ─── HEADER (Estilo Main) ─── */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#fff" />
+          <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Profile</Text>
-        <View style={{ width: 36 }} />
+        <Text style={styles.headerTitle}>Student Profile</Text>
+        <View style={{ width: 36 }} /> {/* Espaciador invisible para centrar el título */}
       </View>
 
+      {/* ─── HERO PROFILE (Estilo Main + Datos Seguros Feature) ─── */}
       <View style={styles.profileHero}>
         <View style={styles.avatarWrapper}>
-          <Image source={{ uri: student?.photoUrl }} style={styles.avatar} />
+          <Image
+            source={{
+              uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
+            }}
+            style={styles.avatar}
+          />
           <View style={styles.roleBadge}>
             <Text style={styles.roleBadgeText}>STUDENT</Text>
           </View>
         </View>
-        <Text style={styles.fullName}>{student?.fullName}</Text>
-        <Text style={styles.username}>@{student?.username}</Text>
+        {/* Usamos split('@') para sacar el nombre del correo, evitando el error de fullName */}
+        <Text style={styles.fullName}>{student?.email?.split('@')[0] || 'Student'}</Text>
+        <Text style={styles.username}>ID: {student?.studentIdNumber || 'N/A'}</Text>
         <View style={styles.yearPill}>
           <GraduationCap size={13} color={colors.primaryRed} />
-          <Text style={styles.yearPillText}>Year {student?.year} · {student?.degree?.split(' ').slice(0, 3).join(' ')}</Text>
+          <Text style={styles.yearPillText}>{student?.degree || 'Academic Program'}</Text>
         </View>
       </View>
 
+      {/* ─── INFORMACIÓN ACADÉMICA ─── */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Academic Information</Text>
         {infoRows.map(({ icon: Icon, label, value }) => (
@@ -81,12 +90,13 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>{label}</Text>
-              <Text style={styles.infoValue}>{value}</Text>
+              <Text style={styles.infoValue}>{value || 'Not Provided'}</Text>
             </View>
           </View>
         ))}
       </View>
 
+      {/* ─── PREFERENCIAS (Mantenemos el Dark Mode de Main) ─── */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Preferences</Text>
         <View style={styles.preferenceRow}>
@@ -103,6 +113,7 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* ─── ENLACES RÁPIDOS ─── */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Quick Links</Text>
         {[
@@ -120,17 +131,17 @@ export default function ProfileScreen() {
         ))}
       </View>
 
+      {/* ─── CERRAR SESIÓN ─── */}
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
         <LogOut size={18} color={colors.primaryRed} />
         <Text style={styles.logoutText}>Sign out</Text>
       </TouchableOpacity>
-
-      <View style={{ height: 32 }} />
     </ScrollView>
   );
 }
 
-const makeStyles = (colors: typeof Colors) => StyleSheet.create({
+// ─── HOJAS DE ESTILO DINÁMICAS (Main) ───
+const makeStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: 24 },
   header: {
