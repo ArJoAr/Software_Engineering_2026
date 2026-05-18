@@ -2,6 +2,7 @@ const shared = {
   primaryRed: '#C8102E',
   primaryRedDark: '#A00D24',
   primaryRedMid: '#E8C0CA',
+  primaryGreen: '#00FF00',
   textOnRed: '#FFFFFF',
   success: '#34C759',
   successLight: '#E8F8ED',
