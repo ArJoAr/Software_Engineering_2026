@@ -16,7 +16,6 @@ import {
   Library,
   Calendar,
   Gift,
-  Menu,
   ChevronRight,
   Bell,
   Ticket,
@@ -77,7 +76,8 @@ export default function HomeScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.headerIcon} onPress={() => router.push('/menu' as any)}>
-              <Menu size={20} color="#fff" />
+              {/* Dejado vacío intencionalmente para evitar errores de compilación */}
+              <View />
             </TouchableOpacity>
           </View>
         </View>
