@@ -84,8 +84,8 @@ export default function NotificationsScreen() {
         {filtered.length === 0 ? (
           <View style={styles.empty}>
             <Bell size={40} color={Colors.textTertiary} />
-            <Text style={styles.emptyTitle}>No notifications</Text>
-            <Text style={styles.emptyText}>You're all caught up!</Text>
+            <Text style={styles.emptyTitle}>"No notifications"</Text>
+            <Text style={styles.emptyText}>"You're all caught up!"</Text>
           </View>
         ) : (
           filtered.map((n) => (
