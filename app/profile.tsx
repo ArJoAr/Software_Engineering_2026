@@ -335,357 +335,73 @@ export default function ProfileScreen() {
             </View>
           ))}
         </View>
+{/* ─── TARJETA DE QUICK LINKS (CORREGIDA) ─── */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Quick Links</Text>
+        
+        {[
+          { icon: CreditCard, label: 'View Student ID Card', route: '/student-id' },
+          { icon: Calendar, label: 'Academic Calendar', route: '/calendar' },
+          { icon: Mail, label: 'Printer', route: '/printer' },
+        ].map(({ icon: Icon, label, route }) => (
+          <TouchableOpacity 
+            key={label} 
+            style={styles.linkRow} 
+            onPress={() => router.push(route as any)}
+          >
+            <View style={styles.linkIcon}>
+              <Icon size={18} color={colors.primaryRed} />
+            </View>
+            <Text style={styles.linkLabel}>{label}</Text>
+            <ChevronRight size={16} color={colors.textTertiary} />
+          </TouchableOpacity>
+        ))}
 
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Quick Links</Text>
-
-          {quickLinks.map(({ icon: Icon, label, route }) => (
-            <TouchableOpacity
-              key={label}
-              style={styles.linkRow}
-              onPress={() => router.push(route as any)}
-            >
-              <View style={styles.linkIcon}>
-                <Icon size={18} color={Colors.primaryRed} />
-              </View>
-
-              <Text style={styles.linkLabel}>{label}</Text>
-
-              <ChevronRight size={18} color={Colors.textTertiary} />
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <LogOut size={18} color={Colors.primaryRed} />
-          <Text style={styles.logoutText}>Sign out</Text>
+        <TouchableOpacity style={styles.editBtn} onPress={() => {}}>
+          <User size={16} color="#fff" />
+          <Text style={styles.editBtnText}>Edit Profile</Text>
         </TouchableOpacity>
-      </ScrollView>
-    </View>
+      </View>
+
+      {/* ─── BOTÓN DE CERRAR SESIÓN ─── */}
+      <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+        <LogOut size={18} color={colors.primaryRed} />
+        <Text style={styles.logoutText}>Log Out</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-
-  content: {
-    paddingBottom: 24,
-  },
-
-  loadingText: {
-    marginTop: 80,
-    textAlign: 'center',
-    fontSize: 16,
-    color: Colors.textSecondary,
-  },
-
-  header: {
-    backgroundColor: Colors.primaryRed,
-    paddingTop: 56,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-  },
-
-  headerSpacer: {
-    width: 36,
-  },
-
-  profileHero: {
-    alignItems: 'center',
-    paddingVertical: 28,
-    paddingHorizontal: 20,
-  },
-
-  avatarWrapper: {
-    position: 'relative',
-    marginBottom: 14,
-  },
-
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    borderWidth: 3,
-    borderColor: Colors.primaryRed,
-  },
-
-  cameraButton: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: Colors.primaryRed,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: Colors.background,
-  },
-
-  roleBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    backgroundColor: Colors.primaryRed,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: Colors.background,
-  },
-
-  roleBadgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: '#fff',
-    letterSpacing: 0.5,
-  },
-
-  fullName: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: Colors.textPrimary,
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-
-  username: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    marginBottom: 12,
-  },
-
-  nameInput: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: Colors.textPrimary,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.primaryRed,
-    minWidth: 240,
-    textAlign: 'center',
-    marginBottom: 6,
-    paddingVertical: 4,
-  },
-
-  usernameInput: {
-    fontSize: 14,
-    color: Colors.textSecondary,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.separator,
-    minWidth: 180,
-    textAlign: 'center',
-    marginBottom: 12,
-    paddingVertical: 4,
-  },
-
-  yearPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.primaryRedLight,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-
-  yearPillText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.primaryRed,
-  },
-
-  editBtn: {
-    marginTop: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: Colors.primaryRed,
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-
-  editBtnText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-
-  editActions: {
-    marginTop: 16,
-    flexDirection: 'row',
-    gap: 10,
-  },
-
-  saveBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.primaryRed,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-
-  saveBtnText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-
-  cancelBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.primaryRedLight,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-
-  cancelBtnText: {
-    color: Colors.primaryRed,
-    fontWeight: '700',
-    fontSize: 14,
-  },
-
-  card: {
-    backgroundColor: Colors.card,
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginBottom: 16,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
+// ─── ESTILOS (Asegúrate de que cierren bien al final del documento) ───
+const makeStyles = (colors: any) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background },
+    header: {
+      backgroundColor: colors.primaryRed,
+      paddingHorizontal: 20,
+      paddingBottom: 24,
+      paddingTop: 16,
     },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-
-  cardTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: 14,
-  },
-
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.separator,
-  },
-
-  infoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: Colors.primaryRedLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-
-  infoContent: {
-    flex: 1,
-  },
-
-  infoLabel: {
-    fontSize: 11,
-    color: Colors.textTertiary,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-    marginBottom: 2,
-  },
-
-  infoValue: {
-    fontSize: 14,
-    color: Colors.textPrimary,
-    fontWeight: '500',
-  },
-
-  infoInput: {
-    fontSize: 14,
-    color: Colors.textPrimary,
-    fontWeight: '500',
-    borderWidth: 1,
-    borderColor: Colors.separator,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    backgroundColor: Colors.background,
-  },
-
-  linkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-  },
-
-  linkIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: Colors.primaryRedLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  linkLabel: {
-    flex: 1,
-    fontSize: 15,
-    color: Colors.textPrimary,
-    fontWeight: '500',
-  },
-
-  logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginHorizontal: 20,
-    marginTop: 4,
-    paddingVertical: 14,
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: Colors.primaryRedLight,
-  },
-
-  logoutText: {
-    fontSize: 15,
-    color: Colors.primaryRed,
-    fontWeight: '600',
-  },
-});
+    headerTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+    backBtn: { padding: 4, marginRight: 8 },
+    headerTitle: { fontSize: 20, fontWeight: '700', color: '#fff' },
+    profileCard: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    avatar: { width: 68, height: 68, borderRadius: 34, borderWidth: 2, borderColor: 'rgba(255,255,255,0.4)' },
+    name: { fontSize: 18, fontWeight: '700', color: '#fff', marginBottom: 2 },
+    nia: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
+    card: { backgroundColor: colors.card, marginHorizontal: 16, marginTop: 16, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: colors.cardBorder },
+    cardTitle: { fontSize: 13, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 14 },
+    infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderColor: colors.separator },
+    infoIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: colors.primaryRedLight, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+    infoContent: { flex: 1 },
+    infoLabel: { fontSize: 11, color: colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 2 },
+    infoValue: { fontSize: 14, color: colors.textPrimary, fontWeight: '500' },
+    preferenceRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
+    linkIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.primaryRedLight, alignItems: 'center', justifyContent: 'center' },
+    linkLabel: { flex: 1, fontSize: 15, color: colors.textPrimary, fontWeight: '500' },
+    editBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.primaryRed, borderRadius: 12, paddingVertical: 12, marginTop: 14 },
+    editBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
+    logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: colors.card, marginHorizontal: 16, marginTop: 16, marginBottom: 32, borderRadius: 16, paddingVertical: 14, borderWidth: 1, borderColor: colors.cardBorder },
+    logoutText: { color: colors.primaryRed, fontSize: 15, fontWeight: '600' },
+  });
