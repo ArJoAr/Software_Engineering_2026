@@ -276,6 +276,16 @@ export default function ProfileScreen() {
                 <X size={16} color={Colors.primaryRed} />
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Quick Links</Text>
+        {[
+          { icon: CreditCard, label: 'View Student ID Card', route: '/student-id' },
+          { icon: Calendar, label: 'Academic Calendar', route: '/calendar' },
+          { icon: Mail, label: 'Printer', route: '/printer' },
+        ].map(({ icon: Icon, label, route }) => (
+          <TouchableOpacity key={label} style={styles.linkRow} onPress={() => router.push(route as any)}>
+            <View style={styles.linkIcon}>
+              <Icon size={18} color={Colors.primaryRed} />
             </View>
           ) : (
             <TouchableOpacity style={styles.editBtn} onPress={handleEdit}>

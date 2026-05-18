@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -63,9 +63,16 @@ const CATEGORY_COLORS: Record<string, string> = {
   Entertainment: Colors.success,
 };
 
+const CATEGORIES = ['All', 'Shopping', 'Culture', 'Transport', 'Technology', 'Entertainment'];
+
 export default function HighlightsScreen() {
   const router = useRouter();
+  const [activeCategory, setActiveCategory] = useState('All');
   const savedEvents = MOCK_EVENTS.filter((e) => e.isFavorited);
+
+  const filteredBenefits = activeCategory === 'All'
+    ? BENEFITS
+    : BENEFITS.filter((b) => b.category === activeCategory);
 
   return (
     <ScrollView
@@ -86,10 +93,41 @@ export default function HighlightsScreen() {
           <Tag size={16} color={Colors.primaryRed} />
           <Text style={styles.sectionTitle}>UPF Benefits</Text>
         </View>
-        {BENEFITS.map((benefit) => {
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+          style={styles.filterScroll}
+        >
+          {CATEGORIES.map((cat) => {
+            const isActive = cat === activeCategory;
+            return (
+              <TouchableOpacity
+                key={cat}
+                style={[styles.filterPill, isActive && styles.filterPillActive]}
+                onPress={() => setActiveCategory(cat)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        {filteredBenefits.length === 0 && (
+          <View style={styles.empty}>
+            <Text style={styles.emptyText}>No benefits in this category.</Text>
+          </View>
+        )}
+
+        {filteredBenefits.map((benefit) => {
           const color = CATEGORY_COLORS[benefit.category] ?? Colors.primaryRed;
           return (
             <TouchableOpacity key={benefit.id} style={styles.benefitCard} activeOpacity={0.8}>
+
               <Image source={{ uri: benefit.imageUrl }} style={styles.benefitImage} />
               <View style={styles.benefitBody}>
                 <View style={styles.benefitTopRow}>
@@ -192,6 +230,23 @@ const styles = StyleSheet.create({
   benefitDesc: { fontSize: 13, color: Colors.textSecondary, lineHeight: 18, marginBottom: 10 },
   benefitFooter: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   learnMore: { fontSize: 13, fontWeight: '600', color: Colors.primaryRed },
+
+  filterScroll: { marginBottom: 14 },
+  filterRow: { gap: 8, paddingRight: 4 },
+  filterPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: Colors.card,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+  },
+  filterPillActive: {
+    backgroundColor: Colors.primaryRed,
+    borderColor: Colors.primaryRed,
+  },
+  filterPillText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  filterPillTextActive: { color: '#fff' },
 
   empty: { backgroundColor: Colors.card, borderRadius: 14, padding: 20, alignItems: 'center', marginBottom: 14 },
   emptyText: { fontSize: 13, color: Colors.textTertiary, textAlign: 'center', lineHeight: 19 },
