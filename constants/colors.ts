@@ -3,6 +3,7 @@ export const Colors = {
   primaryRedDark: '#A00D24',
   primaryRedLight: '#F9E6EA',
   primaryRedMid: '#E8C0CA',
+  primaryGreen: '#00FF00',
 
   background: '#F2F2F7',
   card: '#FFFFFF',
