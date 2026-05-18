@@ -2,12 +2,12 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
-export default function RootLayout() {
-  useFrameworkReady();
-
+function AppStack() {
+  const { isDark } = useTheme();
   return (
-    <AuthProvider>
+    <>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="login" />
         <Stack.Screen name="(tabs)" />
@@ -20,7 +20,19 @@ export default function RootLayout() {
         <Stack.Screen name="menu" options={{ presentation: 'modal' }} />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar style="auto" />
-    </AuthProvider>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
+    </>
+  );
+}
+
+export default function RootLayout() {
+  useFrameworkReady();
+
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <AppStack />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
