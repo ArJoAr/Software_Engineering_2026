@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
+  Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -19,13 +20,17 @@ import {
   ChevronRight,
   MapPin,
   User,
+  Moon,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { student, logout } = useAuth();
+  const { colors, isDark, toggleTheme } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const handleLogout = () => {
     logout();
@@ -62,7 +67,7 @@ export default function ProfileScreen() {
         <Text style={styles.fullName}>{student?.fullName}</Text>
         <Text style={styles.username}>@{student?.username}</Text>
         <View style={styles.yearPill}>
-          <GraduationCap size={13} color={Colors.primaryRed} />
+          <GraduationCap size={13} color={colors.primaryRed} />
           <Text style={styles.yearPillText}>Year {student?.year} · {student?.degree?.split(' ').slice(0, 3).join(' ')}</Text>
         </View>
       </View>
@@ -72,7 +77,7 @@ export default function ProfileScreen() {
         {infoRows.map(({ icon: Icon, label, value }) => (
           <View key={label} style={styles.infoRow}>
             <View style={styles.infoIcon}>
-              <Icon size={16} color={Colors.primaryRed} />
+              <Icon size={16} color={colors.primaryRed} />
             </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoLabel}>{label}</Text>
@@ -80,6 +85,22 @@ export default function ProfileScreen() {
             </View>
           </View>
         ))}
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Preferences</Text>
+        <View style={styles.preferenceRow}>
+          <View style={styles.linkIcon}>
+            <Moon size={18} color={colors.primaryRed} />
+          </View>
+          <Text style={styles.linkLabel}>Dark Mode</Text>
+          <Switch
+            value={isDark}
+            onValueChange={toggleTheme}
+            trackColor={{ false: colors.cardBorder, true: colors.primaryRed }}
+            thumbColor="#fff"
+          />
+        </View>
       </View>
 
       <View style={styles.card}>
@@ -91,16 +112,16 @@ export default function ProfileScreen() {
         ].map(({ icon: Icon, label, route }) => (
           <TouchableOpacity key={label} style={styles.linkRow} onPress={() => router.push(route as any)}>
             <View style={styles.linkIcon}>
-              <Icon size={18} color={Colors.primaryRed} />
+              <Icon size={18} color={colors.primaryRed} />
             </View>
             <Text style={styles.linkLabel}>{label}</Text>
-            <ChevronRight size={16} color={Colors.textTertiary} />
+            <ChevronRight size={16} color={colors.textTertiary} />
           </TouchableOpacity>
         ))}
       </View>
 
       <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
-        <LogOut size={18} color={Colors.primaryRed} />
+        <LogOut size={18} color={colors.primaryRed} />
         <Text style={styles.logoutText}>Sign out</Text>
       </TouchableOpacity>
 
@@ -109,11 +130,11 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: typeof Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: 24 },
   header: {
-    backgroundColor: Colors.primaryRed,
+    backgroundColor: colors.primaryRed,
     paddingTop: 56,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -138,35 +159,35 @@ const styles = StyleSheet.create({
     height: 96,
     borderRadius: 48,
     borderWidth: 3,
-    borderColor: Colors.primaryRed,
+    borderColor: colors.primaryRed,
   },
   roleBadge: {
     position: 'absolute',
     bottom: -4,
     right: -4,
-    backgroundColor: Colors.primaryRed,
+    backgroundColor: colors.primaryRed,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: Colors.background,
+    borderColor: colors.background,
   },
   roleBadgeText: { fontSize: 9, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
-  fullName: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary, marginBottom: 4 },
-  username: { fontSize: 14, color: Colors.textSecondary, marginBottom: 12 },
+  fullName: { fontSize: 20, fontWeight: '800', color: colors.textPrimary, marginBottom: 4 },
+  username: { fontSize: 14, color: colors.textSecondary, marginBottom: 12 },
   yearPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.primaryRedLight,
+    backgroundColor: colors.primaryRedLight,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
   },
-  yearPillText: { fontSize: 12, fontWeight: '600', color: Colors.primaryRed },
+  yearPillText: { fontSize: 12, fontWeight: '600', color: colors.primaryRed },
 
   card: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: 16,
     marginHorizontal: 20,
     marginBottom: 16,
@@ -180,35 +201,36 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: Colors.textTertiary,
+    color: colors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.7,
     marginBottom: 14,
   },
-  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.separator },
+  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.separator },
   infoIcon: {
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: Colors.primaryRedLight,
+    backgroundColor: colors.primaryRedLight,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   infoContent: { flex: 1 },
-  infoLabel: { fontSize: 11, color: Colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 2 },
-  infoValue: { fontSize: 14, color: Colors.textPrimary, fontWeight: '500' },
+  infoLabel: { fontSize: 11, color: colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 2 },
+  infoValue: { fontSize: 14, color: colors.textPrimary, fontWeight: '500' },
 
+  preferenceRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   linkIcon: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: Colors.primaryRedLight,
+    backgroundColor: colors.primaryRedLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  linkLabel: { flex: 1, fontSize: 15, color: Colors.textPrimary, fontWeight: '500' },
+  linkLabel: { flex: 1, fontSize: 15, color: colors.textPrimary, fontWeight: '500' },
 
   logoutBtn: {
     flexDirection: 'row',
@@ -218,10 +240,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 4,
     paddingVertical: 14,
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: Colors.primaryRedLight,
+    borderColor: colors.primaryRedLight,
   },
-  logoutText: { fontSize: 15, color: Colors.primaryRed, fontWeight: '600' },
+  logoutText: { fontSize: 15, color: colors.primaryRed, fontWeight: '600' },
 });

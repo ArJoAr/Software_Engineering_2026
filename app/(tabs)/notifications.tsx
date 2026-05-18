@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,9 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Bell, CalendarDays, BookOpen, Megaphone } from 'lucide-react-native';
+import { Bell } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
 import { MOCK_NOTIFICATIONS } from '@/constants/mockData';
 import { NotificationCard } from '@/components/NotificationCard';
 
@@ -23,6 +24,8 @@ type FilterKey = (typeof FILTERS)[number]['key'];
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [filter, setFilter] = useState<FilterKey>('all');
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
 
@@ -83,7 +86,7 @@ export default function NotificationsScreen() {
       <View style={styles.body}>
         {filtered.length === 0 ? (
           <View style={styles.empty}>
-            <Bell size={40} color={Colors.textTertiary} />
+            <Bell size={40} color={colors.textTertiary} />
             <Text style={styles.emptyTitle}>No notifications</Text>
             <Text style={styles.emptyText}>You're all caught up!</Text>
           </View>
@@ -105,11 +108,11 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: typeof Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: 32 },
   header: {
-    backgroundColor: Colors.primaryRed,
+    backgroundColor: colors.primaryRed,
     paddingTop: 56,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFD700', width: 16, height: 16,
     borderRadius: 8, alignItems: 'center', justifyContent: 'center',
   },
-  bellBadgeText: { fontSize: 9, fontWeight: '800', color: Colors.primaryRedDark },
+  bellBadgeText: { fontSize: 9, fontWeight: '800', color: colors.primaryRedDark },
   markAllBtn: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 12,
@@ -135,18 +138,18 @@ const styles = StyleSheet.create({
   },
   markAllText: { fontSize: 12, color: '#fff', fontWeight: '600' },
 
-  filterBar: { backgroundColor: Colors.card, borderBottomWidth: 1, borderBottomColor: Colors.separator },
+  filterBar: { backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.separator },
   filterContent: { paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
   filterChip: {
     paddingHorizontal: 16, paddingVertical: 7, borderRadius: 20,
-    backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.cardBorder,
+    backgroundColor: colors.background, borderWidth: 1, borderColor: colors.cardBorder,
   },
-  filterChipActive: { backgroundColor: Colors.primaryRed, borderColor: Colors.primaryRed },
-  filterChipText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
+  filterChipActive: { backgroundColor: colors.primaryRed, borderColor: colors.primaryRed },
+  filterChipText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
   filterChipTextActive: { color: '#fff' },
 
   body: { padding: 16 },
   empty: { alignItems: 'center', paddingVertical: 60, gap: 10 },
-  emptyTitle: { fontSize: 17, fontWeight: '700', color: Colors.textPrimary },
-  emptyText: { fontSize: 14, color: Colors.textTertiary },
+  emptyTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary },
+  emptyText: { fontSize: 14, color: colors.textTertiary },
 });
