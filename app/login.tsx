@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,11 +18,18 @@ import { StatusBar } from 'expo-status-bar';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/(tabs)');
+    }
+  }, [isAuthenticated, router]);
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
