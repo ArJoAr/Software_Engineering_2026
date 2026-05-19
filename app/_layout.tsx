@@ -17,6 +17,7 @@ function AppStack() {
         <Stack.Screen name="calendar" options={{ presentation: 'card' }} />
         <Stack.Screen name="events" options={{ presentation: 'card' }} />
         <Stack.Screen name="event/[id]" options={{ presentation: 'card' }} />
+        <Stack.Screen name="chatbot" options={{ presentation: 'card' }} />
         <Stack.Screen name="menu" options={{ presentation: 'modal' }} />
         <Stack.Screen name="+not-found" />
       </Stack>

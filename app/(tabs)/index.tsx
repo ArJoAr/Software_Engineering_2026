@@ -13,12 +13,11 @@ import {
   CalendarDays,
   Globe,
   BookOpen,
-  Library,
-  Calendar,
   Gift,
   ChevronRight,
   Bell,
   Ticket,
+  MessageCircle,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useTheme } from '@/context/ThemeContext';
@@ -32,9 +31,8 @@ const QUICK_ACCESS = [
   { id: 'calendar', title: 'My Calendar', icon: CalendarDays, route: '/calendar', color: Colors.info },
   { id: 'campus-global', title: 'Campus Global', icon: Globe, route: '/academic', color: Colors.categoryColors.conference },
   { id: 'aula-global', title: 'Aula Global', icon: BookOpen, route: '/academic', color: Colors.academic },
-  { id: 'library', title: 'My Library Account', icon: Library, route: '/academic', color: Colors.success },
-  { id: 'agenda', title: 'Agenda', icon: Calendar, route: '/calendar', color: Colors.categoryColors.culture },
-  { id: 'benefits', title: 'UPF Benefits', icon: Gift, route: '/highlights', color: Colors.warning },
+  { id: 'chatbot', title: 'Chatbot', icon: MessageCircle, route: '/chatbot', color: Colors.warning },
+  { id: 'benefits', title: 'UPF Benefits', icon: Gift, route: '/highlights', color: Colors.success },
   { id: 'events', title: 'Campus Events', icon: Ticket, route: '/events', color: Colors.categoryColors.events },
 ];
 
