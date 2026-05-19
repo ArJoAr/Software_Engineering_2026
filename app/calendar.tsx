@@ -36,7 +36,6 @@ WebBrowser.maybeCompleteAuthSession();
 
 // ─── Supabase Configuration ──────────────────────────────────────────────────
 const supabaseUrl = 'https://prrtyicplljeyqpuhnpf.supabase.co';
-// REEMPLAZA ESTO por la clave "anon" / "public" de tu panel de Supabase:
 const supabaseAnonKey = 'sb_publishable__CfchfHgr_hvXH5uuzWrIw_bdADyLxU'; 
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -59,13 +58,15 @@ const MONTHS      = [
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+// FIXED: Generates local YYYY-MM-DD instead of switching to UTC via toISOString
 function toDateStr(d: Date) {
-  return d.toISOString().split('T')[0];
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 function getWeekDays(base: Date): Date[] {
   const dow = base.getDay();
-  const monday = new Date(base);
+  const monday = new Date(base.getFullYear(), base.getMonth(), base.getDate());
   monday.setDate(base.getDate() - (dow === 0 ? 6 : dow - 1));
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
@@ -253,7 +254,6 @@ type ViewMode = 'monthly' | 'daily';
 export default function CalendarScreen() {
   const router = useRouter();
 
-  // Fecha actual dinámica
   const today = new Date();
   const [viewMode, setViewMode]       = useState<ViewMode>('monthly');
   const [selectedDate, setSelectedDate] = useState(today);
