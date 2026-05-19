@@ -56,11 +56,18 @@ TypeScript type definitions and interfaces.
     ```bash
     npm install
     ```
-2.  **Start the development server:**
+2.  **Configure environment variables:**
+    - Copy `.env.example` to `.env` or `.env.local`
+    - Add your Gemini API key to `EXPO_PUBLIC_GEMINI_API_KEY`
+
+    ```bash
+    cp .env.example .env
+    ```
+3.  **Start the development server:**
     ```bash
     npm run dev
     ```
-3.  **Run on a device or emulator:**
+4.  **Run on a device or emulator:**
     *   Press `a` to run on an Android emulator.
     *   Press `i` to run on an iOS simulator (macOS only).
     *   Scan the QR code with the Expo Go app on your physical device.
