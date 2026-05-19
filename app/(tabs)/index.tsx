@@ -73,10 +73,6 @@ export default function HomeScreen() {
               <View style={styles.bellDot} />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.headerIcon} onPress={() => router.push('/menu' as any)}>
-              {/* Dejado vacío intencionalmente para evitar errores de compilación */}
-              <View />
-            </TouchableOpacity>
           </View>
         </View>
 
