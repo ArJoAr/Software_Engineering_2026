@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,13 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
+import { createClient } from '@supabase/supabase-js';
 import {
   ArrowLeft,
   Clock,
@@ -26,6 +31,16 @@ import { Colors } from '@/constants/colors';
 import { MOCK_CALENDAR } from '@/constants/mockData';
 import type { CalendarEvent } from '@/types';
 
+// Asegura que el navegador se cierre al autenticar en dispositivos móviles
+WebBrowser.maybeCompleteAuthSession();
+
+// ─── Supabase Configuration ──────────────────────────────────────────────────
+const supabaseUrl = 'https://prrtyicplljeyqpuhnpf.supabase.co';
+// REEMPLAZA ESTO por la clave "anon" / "public" de tu panel de Supabase:
+const supabaseAnonKey = 'sb_publishable__CfchfHgr_hvXH5uuzWrIw_bdADyLxU'; 
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const TYPE_STYLES: Record<string, { color: string; bg: string; label: string }> = {
@@ -33,10 +48,10 @@ const TYPE_STYLES: Record<string, { color: string; bg: string; label: string }> 
   exam:     { color: Colors.primaryRed,              bg: Colors.primaryRedLight, label: 'Exam' },
   deadline: { color: Colors.warning,                 bg: Colors.warningLight,   label: 'Deadline' },
   event:    { color: Colors.categoryColors.events,   bg: Colors.categoryBg.events, label: 'Event' },
+  google:   { color: '#4285F4',                      bg: '#E8F0FE',             label: 'Google Sync' },
 };
 
 const DAYS_SHORT  = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const DAYS_FULL   = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS      = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -62,12 +77,10 @@ function getWeekDays(base: Date): Date[] {
 function getDaysInMonth(year: number, month: number): Date[] {
   const first = new Date(year, month, 1);
   const last  = new Date(year, month + 1, 0);
-  const startDow = first.getDay(); // 0=Sun
-  // Pad so Monday is first column (ISO week)
+  const startDow = first.getDay();
   const padStart = startDow === 0 ? 6 : startDow - 1;
   const cells: (Date | null)[] = Array(padStart).fill(null);
   for (let d = 1; d <= last.getDate(); d++) cells.push(new Date(year, month, d));
-  // Pad end to complete last row
   while (cells.length % 7 !== 0) cells.push(null);
   return cells as Date[];
 }
@@ -162,7 +175,6 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.modalSheet}>
-          {/* Header */}
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>New Event</Text>
             <TouchableOpacity onPress={handleClose} style={styles.modalCloseBtn}>
@@ -171,10 +183,9 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            {/* Type Selector */}
             <Text style={styles.fieldLabel}>Type</Text>
             <View style={styles.typeRow}>
-              {(Object.entries(TYPE_STYLES) as [EventType, typeof TYPE_STYLES[string]][]).map(([key, val]) => (
+              {(Object.entries(TYPE_STYLES).filter(([k]) => k !== 'google') as [EventType, typeof TYPE_STYLES[string]][]).map(([key, val]) => (
                 <TouchableOpacity
                   key={key}
                   style={[
@@ -194,75 +205,30 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
               ))}
             </View>
 
-            {/* Title */}
             <Text style={styles.fieldLabel}>Title *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Media Theory"
-              placeholderTextColor={Colors.textTertiary}
-              value={title}
-              onChangeText={setTitle}
-            />
+            <TextInput style={styles.input} placeholder="e.g. Media Theory" placeholderTextColor={Colors.textTertiary} value={title} onChangeText={setTitle} />
 
-            {/* Subject */}
             <Text style={styles.fieldLabel}>Subject</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Cultural Studies"
-              placeholderTextColor={Colors.textTertiary}
-              value={subject}
-              onChangeText={setSubject}
-            />
+            <TextInput style={styles.input} placeholder="e.g. Cultural Studies" placeholderTextColor={Colors.textTertiary} value={subject} onChangeText={setSubject} />
 
-            {/* Date */}
             <Text style={styles.fieldLabel}>Date * (YYYY-MM-DD)</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="2025-04-14"
-              placeholderTextColor={Colors.textTertiary}
-              value={date}
-              onChangeText={setDate}
-              keyboardType="numeric"
-            />
+            <TextInput style={styles.input} placeholder="2026-05-19" placeholderTextColor={Colors.textTertiary} value={date} onChangeText={setDate} keyboardType="numeric" />
 
-            {/* Time row */}
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.fieldLabel}>Start time *</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="10:00"
-                  placeholderTextColor={Colors.textTertiary}
-                  value={time}
-                  onChangeText={setTime}
-                  keyboardType="numeric"
-                />
+                <TextInput style={styles.input} placeholder="10:00" placeholderTextColor={Colors.textTertiary} value={time} onChangeText={setTime} keyboardType="numeric" />
               </View>
               <View style={{ width: 12 }} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.fieldLabel}>End time</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="12:00"
-                  placeholderTextColor={Colors.textTertiary}
-                  value={endTime}
-                  onChangeText={setEndTime}
-                  keyboardType="numeric"
-                />
+                <TextInput style={styles.input} placeholder="12:00" placeholderTextColor={Colors.textTertiary} value={endTime} onChangeText={setEndTime} keyboardType="numeric" />
               </View>
             </View>
 
-            {/* Location */}
             <Text style={styles.fieldLabel}>Location</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. Room 52.S31"
-              placeholderTextColor={Colors.textTertiary}
-              value={location}
-              onChangeText={setLocation}
-            />
+            <TextInput style={styles.input} placeholder="e.g. Room 52.S31" placeholderTextColor={Colors.textTertiary} value={location} onChangeText={setLocation} />
 
-            {/* Submit */}
             <TouchableOpacity
               style={[styles.addBtn, (!title.trim() || !date.trim() || !time.trim()) && styles.addBtnDisabled]}
               onPress={handleAdd}
@@ -287,12 +253,102 @@ type ViewMode = 'monthly' | 'daily';
 export default function CalendarScreen() {
   const router = useRouter();
 
+  // Fecha actual dinámica
+  const today = new Date();
   const [viewMode, setViewMode]       = useState<ViewMode>('monthly');
-  const [selectedDate, setSelectedDate] = useState(new Date('2025-04-14'));
-  const [weekBase, setWeekBase]       = useState(new Date('2025-04-14'));
-  const [monthBase, setMonthBase]     = useState(new Date('2025-04-01'));
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [weekBase, setWeekBase]       = useState(today);
+  const [monthBase, setMonthBase]     = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [events, setEvents]           = useState<CalendarEvent[]>(MOCK_CALENDAR);
   const [showModal, setShowModal]     = useState(false);
+  const [syncing, setSyncing]         = useState(false);
+  const [isGoogleConnected, setIsGoogleConnected] = useState(false);
+
+  useEffect(() => {
+    checkExistingGoogleSession();
+  }, []);
+
+  const checkExistingGoogleSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.provider_token) {
+      setIsGoogleConnected(true);
+      fetchGoogleCalendarEvents(session.provider_token);
+    }
+  };
+
+  const handleConnectGoogle = async () => {
+    setSyncing(true);
+    try {
+      const redirectTo = AuthSession.makeRedirectUri();
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          scopes: 'https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events.readonly',
+          redirectTo: redirectTo,
+          queryParams: { access_type: 'offline', prompt: 'consent' },
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+        if (result.type === 'success') {
+          const { data: sessionData } = await supabase.auth.getSession();
+          if (sessionData.session?.provider_token) {
+            setIsGoogleConnected(true);
+            await fetchGoogleCalendarEvents(sessionData.session.provider_token);
+            Alert.alert("Success", "Google Calendar synced flawlessly!");
+          }
+        }
+      }
+    } catch (err: any) {
+      Alert.alert("Sync Error", err.message || "Failed to link Google account.");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const fetchGoogleCalendarEvents = async (token: string) => {
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString()}&maxResults=100`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await response.json();
+
+      if (data.items) {
+        const mappedGoogleEvents: CalendarEvent[] = data.items
+          .filter((gEvent: any) => gEvent.start?.date || gEvent.start?.dateTime)
+          .map((gEvent: any) => {
+            const startDateTime = gEvent.start.dateTime || gEvent.start.date;
+            const endDateTime = gEvent.end?.dateTime || gEvent.end?.date || '';
+            
+            const eventDate = startDateTime.split('T')[0];
+            const eventTime = gEvent.start.dateTime ? startDateTime.split('T')[1].slice(0, 5) : '00:00';
+            const eventEndTime = gEvent.end?.dateTime ? endDateTime.split('T')[1].slice(0, 5) : undefined;
+
+            return {
+              id: gEvent.id,
+              title: gEvent.summary || 'No Title',
+              date: eventDate,
+              time: eventTime,
+              endTime: eventEndTime,
+              location: gEvent.location || undefined,
+              type: 'google',
+              subject: 'Google Account'
+            };
+          });
+
+        setEvents((prev) => {
+          const localEvents = prev.filter((e) => (e.type as string) !== 'google');
+          return [...localEvents, ...mappedGoogleEvents];
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching Google items:", err);
+    }
+  };
 
   // ── Derived ─────────────────────────────────────────────────────────────
   const selectedStr   = toDateStr(selectedDate);
@@ -310,11 +366,8 @@ export default function CalendarScreen() {
     setViewMode('daily');
   };
 
-  // ── Monthly navigation ───────────────────────────────────────────────────
   const prevMonth = () => setMonthBase(new Date(monthBase.getFullYear(), monthBase.getMonth() - 1, 1));
   const nextMonth = () => setMonthBase(new Date(monthBase.getFullYear(), monthBase.getMonth() + 1, 1));
-
-  // ── Daily / Weekly navigation ─────────────────────────────────────────────
   const prevWeek = () => { const d = new Date(weekBase); d.setDate(d.getDate() - 7); setWeekBase(d); };
   const nextWeek = () => { const d = new Date(weekBase); d.setDate(d.getDate() + 7); setWeekBase(d); };
 
@@ -334,7 +387,6 @@ export default function CalendarScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Day-of-week header */}
       <View style={styles.weekRow}>
         {DAYS_SHORT.map((d) => (
           <View key={d} style={styles.dayHeaderCell}>
@@ -343,7 +395,6 @@ export default function CalendarScreen() {
         ))}
       </View>
 
-      {/* Calendar grid */}
       <View style={styles.monthGrid}>
         {monthCells.map((cell, i) => {
           if (!cell) return <View key={`empty-${i}`} style={styles.monthCell} />;
@@ -382,7 +433,6 @@ export default function CalendarScreen() {
   // ── Daily View ────────────────────────────────────────────────────────────
   const DailyView = () => (
     <>
-      {/* Week strip */}
       <View style={styles.calendarCard}>
         <View style={styles.weekNav}>
           <TouchableOpacity onPress={prevWeek} style={styles.navBtn}>
@@ -424,7 +474,6 @@ export default function CalendarScreen() {
         </View>
       </View>
 
-      {/* Day events */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>
           {selectedDate.toLocaleDateString('en-US', {
@@ -439,34 +488,12 @@ export default function CalendarScreen() {
           dayEvents.map((e) => <EventItem key={e.id} event={e} />)
         )}
       </View>
-
-      {/* Upcoming this week */}
-      {(() => {
-        const upcoming = events
-          .filter((e) => {
-            const d = new Date(e.date);
-            return d >= weekDays[0] && d <= weekDays[6] && e.date !== selectedStr;
-          })
-          .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
-        if (!upcoming.length) return null;
-        return (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Upcoming this week</Text>
-            {upcoming.map((e) => <EventItem key={e.id} event={e} />)}
-          </View>
-        );
-      })()}
     </>
   );
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
@@ -478,38 +505,39 @@ export default function CalendarScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Botón de Sincronización Google */}
+        <TouchableOpacity 
+          style={[styles.googleSyncBtn, isGoogleConnected && styles.googleSyncBtnConnected]} 
+          onPress={handleConnectGoogle}
+          disabled={syncing}
+        >
+          {syncing ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.googleSyncBtnText}>
+              {isGoogleConnected ? '✓ Google Calendar Connected' : 'Sync Google Calendar'}
+            </Text>
+          )}
+        </TouchableOpacity>
+
         {/* View toggle */}
         <View style={styles.toggleRow}>
-          <TouchableOpacity
-            style={[styles.toggleBtn, viewMode === 'daily' && styles.toggleBtnActive]}
-            onPress={() => setViewMode('daily')}
-          >
+          <TouchableOpacity style={[styles.toggleBtn, viewMode === 'daily' && styles.toggleBtnActive]} onPress={() => setViewMode('daily')}>
             <Calendar size={15} color={viewMode === 'daily' ? '#fff' : Colors.textSecondary} />
-            <Text style={[styles.toggleBtnText, viewMode === 'daily' && styles.toggleBtnTextActive]}>
-              Daily
-            </Text>
+            <Text style={[styles.toggleBtnText, viewMode === 'daily' && styles.toggleBtnTextActive]}>Daily</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.toggleBtn, viewMode === 'monthly' && styles.toggleBtnActive]}
-            onPress={() => setViewMode('monthly')}
-          >
+          <TouchableOpacity style={[styles.toggleBtn, viewMode === 'monthly' && styles.toggleBtnActive]} onPress={() => setViewMode('monthly')}>
             <LayoutGrid size={15} color={viewMode === 'monthly' ? '#fff' : Colors.textSecondary} />
-            <Text style={[styles.toggleBtnText, viewMode === 'monthly' && styles.toggleBtnTextActive]}>
-              Monthly
-            </Text>
+            <Text style={[styles.toggleBtnText, viewMode === 'monthly' && styles.toggleBtnTextActive]}>Monthly</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Calendar content */}
         {viewMode === 'monthly' ? <MonthlyView /> : <DailyView />}
 
-        {/* Monthly view: selected day events */}
         {viewMode === 'monthly' && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>
-              {selectedDate.toLocaleDateString('en-US', {
-                weekday: 'long', month: 'long', day: 'numeric',
-              })}
+              {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </Text>
             {dayEvents.length === 0 ? (
               <View style={styles.emptyDay}>
@@ -537,18 +565,11 @@ export default function CalendarScreen() {
         <View style={{ height: 24 }} />
       </ScrollView>
 
-      {/* FAB */}
       <TouchableOpacity style={styles.fab} onPress={() => setShowModal(true)}>
         <Plus size={24} color="#fff" />
       </TouchableOpacity>
 
-      {/* Add Event Modal */}
-      <AddEventModal
-        visible={showModal}
-        defaultDate={selectedStr}
-        onClose={() => setShowModal(false)}
-        onAdd={handleAddEvent}
-      />
+      <AddEventModal visible={showModal} defaultDate={selectedStr} onClose={() => setShowModal(false)} onAdd={handleAddEvent} />
     </>
   );
 }
@@ -558,8 +579,6 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   content:   { paddingBottom: 100 },
-
-  // Header
   header: {
     backgroundColor: Colors.primaryRed,
     paddingTop: 56,
@@ -569,120 +588,59 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  backBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  addHeaderBtn: {
-    width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center', justifyContent: 'center',
-  },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  addHeaderBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
-
-  // View Toggle
-  toggleRow: {
-    flexDirection: 'row',
+  googleSyncBtn: {
+    backgroundColor: '#4285F4',
     marginHorizontal: 20,
-    marginTop: 16,
-    marginBottom: 4,
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    padding: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  toggleBtn: {
-    flex: 1,
-    flexDirection: 'row',
+    marginTop: 15,
+    paddingVertical: 12,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 9,
-    borderRadius: 11,
+    shadowColor: '#4285F4',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
+  googleSyncBtnConnected: {
+    backgroundColor: '#2E7D32',
+    shadowColor: '#2E7D32',
+  },
+  googleSyncBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  toggleRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, marginBottom: 4, backgroundColor: Colors.card, borderRadius: 14, padding: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
+  toggleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 11 },
   toggleBtnActive:     { backgroundColor: Colors.primaryRed },
   toggleBtnText:       { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
   toggleBtnTextActive: { color: '#fff' },
-
-  // Calendar card (shared)
-  calendarCard: {
-    backgroundColor: Colors.card,
-    margin: 20,
-    borderRadius: 18,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  weekNav: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
+  calendarCard: { backgroundColor: Colors.card, margin: 20, borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 },
+  weekNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   navBtn:    { padding: 6 },
   monthLabel: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
-
-  // Week strip (daily view)
   weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  dayCell: {
-    alignItems: 'center', flex: 1,
-    paddingVertical: 8, borderRadius: 12, gap: 4,
-  },
+  dayCell: { alignItems: 'center', flex: 1, paddingVertical: 8, borderRadius: 12, gap: 4 },
   dayCellSelected: { backgroundColor: Colors.primaryRed },
   dayLabel:         { fontSize: 11, fontWeight: '600', color: Colors.textTertiary, textTransform: 'uppercase' },
   dayLabelSelected: { color: 'rgba(255,255,255,0.75)' },
   dayNum:           { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
   dayNumSelected:   { color: '#fff' },
   dayNumToday:      { color: Colors.primaryRed },
-
-  // Month grid
   dayHeaderCell: { flex: 1, alignItems: 'center', paddingBottom: 8 },
   dayHeaderText: { fontSize: 11, fontWeight: '600', color: Colors.textTertiary, textTransform: 'uppercase' },
   monthGrid:     { flexDirection: 'row', flexWrap: 'wrap' },
-  monthCell: {
-    width: `${100 / 7}%`,
-    aspectRatio: 0.9,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 10,
-    gap: 3,
-    marginVertical: 2,
-  },
+  monthCell: { width: `${100 / 7}%`, aspectRatio: 0.9, alignItems: 'center', justifyContent: 'center', borderRadius: 10, gap: 3, marginVertical: 2 },
   monthCellSelected:      { backgroundColor: Colors.primaryRed },
   monthCellNum:           { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
   monthCellNumSelected:   { color: '#fff' },
   monthCellNumToday:      { color: Colors.primaryRed },
   dotRow:                 { flexDirection: 'row', gap: 2 },
-
-  // Dots
   eventDot:         { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.primaryRed },
   eventDotSelected: { backgroundColor: 'rgba(255,255,255,0.8)' },
-
-  // Sections
   section:      { paddingHorizontal: 20, marginBottom: 20 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary, marginBottom: 12 },
-
-  // Event items
-  eventItem: {
-    flexDirection: 'row',
-    backgroundColor: Colors.card,
-    borderRadius: 14,
-    overflow: 'hidden',
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 1,
-  },
+  eventItem: { flexDirection: 'row', backgroundColor: Colors.card, borderRadius: 14, overflow: 'hidden', marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 1 },
   eventStripe:  { width: 4 },
   eventContent: { flex: 1, padding: 12 },
   eventTopRow:  { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
@@ -693,100 +651,27 @@ const styles = StyleSheet.create({
   eventMeta:    { gap: 3 },
   metaItem:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
   metaText:     { fontSize: 12, color: Colors.textSecondary },
-
   emptyDay:  { backgroundColor: Colors.card, borderRadius: 14, padding: 20, alignItems: 'center' },
   emptyText: { color: Colors.textTertiary, fontSize: 14 },
-
-  // Legend
   legendCard:  { backgroundColor: Colors.card, marginHorizontal: 20, borderRadius: 14, padding: 16 },
-  legendTitle: {
-    fontSize: 12, fontWeight: '700', color: Colors.textTertiary,
-    textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12,
-  },
+  legendTitle: { fontSize: 12, fontWeight: '700', color: Colors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
   legendRow:  { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   legendDot:  { width: 10, height: 10, borderRadius: 5 },
   legendText: { fontSize: 13, color: Colors.textSecondary },
-
-  // FAB
-  fab: {
-    position: 'absolute',
-    bottom: 28,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Colors.primaryRed,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Colors.primaryRed,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: Colors.overlay,
-    justifyContent: 'flex-end',
-  },
-  modalSheet: {
-    backgroundColor: Colors.card,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    maxHeight: '90%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
+  fab: { position: 'absolute', bottom: 28, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.primaryRed, alignItems: 'center', justifyContent: 'center', shadowColor: Colors.primaryRed, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8 },
+  modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: Colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '90%' },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   modalTitle:    { fontSize: 18, fontWeight: '700', color: Colors.textPrimary },
   modalCloseBtn: { padding: 4 },
-
-  // Form
-  fieldLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-    marginBottom: 6,
-    marginTop: 14,
-  },
-  input: {
-    backgroundColor: Colors.background,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: Colors.textPrimary,
-    borderWidth: 1,
-    borderColor: Colors.cardBorder,
-  },
+  fieldLabel: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6, marginTop: 14 },
+  input: { backgroundColor: Colors.background, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: Colors.textPrimary, borderWidth: 1, borderColor: Colors.cardBorder },
   typeRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  typeChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1.5,
-  },
+  typeChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5 },
   typeChipText: { fontSize: 13, fontWeight: '600' },
   row: { flexDirection: 'row' },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: Colors.primaryRed,
-    borderRadius: 14,
-    paddingVertical: 15,
-    marginTop: 24,
-  },
+  addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.primaryRed, borderRadius: 14, paddingVertical: 15, marginTop: 24 },
   addBtnDisabled: { opacity: 0.5 },
   addBtnText:     { fontSize: 15, fontWeight: '700', color: '#fff' },
 });
