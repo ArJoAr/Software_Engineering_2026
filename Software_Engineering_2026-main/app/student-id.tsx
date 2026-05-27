@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,9 @@ import {
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Wifi, Share2 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
-import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 
-function QRPlaceholder({ colors }: { colors: typeof Colors }) {
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+function QRPlaceholder() {
   return (
     <View style={styles.qrBox}>
       <View style={styles.qrInner}>
@@ -41,8 +39,6 @@ function QRPlaceholder({ colors }: { colors: typeof Colors }) {
 export default function StudentIdScreen() {
   const router = useRouter();
   const { student } = useAuth();
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const currentYear = new Date().getFullYear();
   const expiry = `${currentYear}/${currentYear + 1}`;
@@ -119,7 +115,7 @@ export default function StudentIdScreen() {
         </View>
 
         <View style={styles.qrSection}>
-          <QRPlaceholder colors={colors} />
+          <QRPlaceholder />
           <Text style={styles.qrNote}>
             This QR code is unique to your account and updates every 30 seconds.
           </Text>
@@ -146,11 +142,11 @@ export default function StudentIdScreen() {
   );
 }
 
-const makeStyles = (colors: typeof Colors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 32 },
   header: {
-    backgroundColor: colors.primaryRed,
+    backgroundColor: Colors.primaryRed,
     paddingTop: 56,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -169,14 +165,14 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
 
   body: { padding: 20 },
-  bodySubtitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary, marginBottom: 6 },
-  bodyNote: { fontSize: 14, color: colors.textSecondary, lineHeight: 20, marginBottom: 24 },
+  bodySubtitle: { fontSize: 20, fontWeight: '700', color: Colors.textPrimary, marginBottom: 6 },
+  bodyNote: { fontSize: 14, color: Colors.textSecondary, lineHeight: 20, marginBottom: 24 },
 
   idCard: {
     borderRadius: 20,
-    backgroundColor: colors.primaryRed,
+    backgroundColor: Colors.primaryRed,
     overflow: 'hidden',
-    shadowColor: colors.primaryRed,
+    shadowColor: Colors.primaryRed,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 20,
@@ -235,7 +231,7 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
 
   qrSection: { alignItems: 'center', marginBottom: 24 },
   qrBox: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
@@ -249,14 +245,14 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   qrInner: { gap: 2, marginBottom: 10 },
   qrRow: { flexDirection: 'row', gap: 2 },
   qrCell: { width: 18, height: 18, borderRadius: 2 },
-  qrCellDark: { backgroundColor: colors.textPrimary },
-  qrCellLight: { backgroundColor: colors.cardBorder },
-  qrCorner: { borderRadius: 4, borderWidth: 2, borderColor: colors.primaryRed },
-  qrLabel: { fontSize: 12, color: colors.textTertiary, fontWeight: '600' },
-  qrNote: { fontSize: 12, color: colors.textTertiary, textAlign: 'center', lineHeight: 17, paddingHorizontal: 20 },
+  qrCellDark: { backgroundColor: Colors.textPrimary },
+  qrCellLight: { backgroundColor: Colors.cardBorder },
+  qrCorner: { borderRadius: 4, borderWidth: 2, borderColor: Colors.primaryRed },
+  qrLabel: { fontSize: 12, color: Colors.textTertiary, fontWeight: '600' },
+  qrNote: { fontSize: 12, color: Colors.textTertiary, textAlign: 'center', lineHeight: 17, paddingHorizontal: 20 },
 
   infoCard: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 16,
     padding: 18,
     shadowColor: '#000',
@@ -268,12 +264,12 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   infoCardTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.textTertiary,
+    color: Colors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.7,
     marginBottom: 14,
   },
   infoItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7 },
-  infoDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primaryRed, flexShrink: 0 },
-  infoText: { fontSize: 14, color: colors.textPrimary },
+  infoDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.primaryRed, flexShrink: 0 },
+  infoText: { fontSize: 14, color: Colors.textPrimary },
 });
