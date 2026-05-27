@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Mail, Send, Info } from 'lucide-react-native';
@@ -6,12 +6,16 @@ import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
 
 const recipientEmail = 'impressio.estudiants@upf.edu';
 const STORAGE_KEY_ORIGIN_EMAIL = '@printer_origin_email';
 
 export default function PrinterScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -78,7 +82,7 @@ export default function PrinterScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <ArrowLeft size={20} color="#fff" />
@@ -90,7 +94,7 @@ export default function PrinterScreen() {
       <View style={styles.body}>
         <View style={styles.heroCard}>
           <View style={styles.heroIcon}>
-            <Mail size={20} color={Colors.primaryRed} />
+            <Mail size={20} color={colors.primaryRed} />
           </View>
           <Text style={styles.heroTitle}>Escribe tu mensaje</Text>
           <Text style={styles.heroSubtitle}>
@@ -105,7 +109,7 @@ export default function PrinterScreen() {
             value={name}
             onChangeText={setName}
             placeholder="Tu nombre"
-            placeholderTextColor={Colors.textTertiary}
+            placeholderTextColor={colors.textTertiary}
           />
 
           <Text style={styles.label}>Correo origen</Text>
@@ -115,7 +119,7 @@ export default function PrinterScreen() {
             onChangeText={setEmail}
             onBlur={handleEmailBlur}
             placeholder="tu@email.com"
-            placeholderTextColor={Colors.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             keyboardType="email-address"
             autoCapitalize="none"
           />
@@ -126,7 +130,7 @@ export default function PrinterScreen() {
             value={message}
             onChangeText={setMessage}
             placeholder="Escribe lo que necesitas..."
-            placeholderTextColor={Colors.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             multiline
             textAlignVertical="top"
           />
@@ -145,7 +149,7 @@ export default function PrinterScreen() {
           </TouchableOpacity>
 
           <View style={styles.noteBox}>
-            <Info size={16} color={Colors.primaryRed} />
+            <Info size={16} color={colors.primaryRed} />
             <Text style={styles.noteText}>
               Se abrirá tu cliente de correo para completar el envío. Este método funciona tanto en web como en móvil.
             </Text>
@@ -156,11 +160,11 @@ export default function PrinterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: typeof Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: 32 },
   header: {
-    backgroundColor: Colors.primaryRed,
+    backgroundColor: colors.primaryRed,
     paddingTop: 56,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -179,7 +183,7 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
   body: { padding: 20 },
   heroCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: 18,
     padding: 20,
     marginBottom: 20,
@@ -193,15 +197,15 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor: Colors.primaryRedLight,
+    backgroundColor: colors.primaryRedLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
   },
-  heroTitle: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary, marginBottom: 8 },
-  heroSubtitle: { fontSize: 14, color: Colors.textSecondary, lineHeight: 20 },
+  heroTitle: { fontSize: 20, fontWeight: '800', color: colors.textPrimary, marginBottom: 8 },
+  heroSubtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   formCard: {
-    backgroundColor: Colors.card,
+    backgroundColor: colors.card,
     borderRadius: 18,
     padding: 20,
     shadowColor: '#000',
@@ -210,17 +214,17 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 2,
   },
-  label: { fontSize: 12, fontWeight: '700', color: Colors.textTertiary, textTransform: 'uppercase', marginBottom: 8 },
+  label: { fontSize: 12, fontWeight: '700', color: colors.textTertiary, textTransform: 'uppercase', marginBottom: 8 },
   input: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: Platform.OS === 'web' ? 14 : 12,
-    color: Colors.textPrimary,
+    color: colors.textPrimary,
     fontSize: 15,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: Colors.separator,
+    borderColor: colors.separator,
   },
   textArea: { minHeight: 140, paddingTop: 14 },
   sendButton: {
@@ -228,23 +232,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    backgroundColor: Colors.primaryRed,
+    backgroundColor: colors.primaryRed,
     borderRadius: 16,
     paddingVertical: 14,
     marginTop: 4,
   },
   sendButtonDisabled: { opacity: 0.6 },
   sendButtonText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  errorText: { color: Colors.primaryRed, marginBottom: 12, fontSize: 13 },
-  successText: { color: Colors.primaryGreen, marginBottom: 12, fontSize: 13 },
+  errorText: { color: colors.primaryRed, marginBottom: 12, fontSize: 13 },
+  successText: { color: colors.success, marginBottom: 12, fontSize: 13 },
   noteBox: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    backgroundColor: Colors.primaryRedLight,
+    backgroundColor: colors.primaryRedLight,
     borderRadius: 14,
     padding: 14,
     marginTop: 18,
   },
-  noteText: { color: Colors.primaryRed, flex: 1, fontSize: 13, lineHeight: 18 },
+  noteText: { color: colors.primaryRed, flex: 1, fontSize: 13, lineHeight: 18 },
 });
