@@ -1,8 +1,7 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { BookOpen, CalendarDays, Megaphone } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
-import { useTheme } from '@/context/ThemeContext';
 import type { Notification } from '@/types';
 
 interface Props {
@@ -10,31 +9,28 @@ interface Props {
   onPress?: () => void;
 }
 
+const TYPE_CONFIG = {
+  academic: {
+    color: Colors.academic,
+    bg: Colors.academicLight,
+    icon: BookOpen,
+    label: 'Academic',
+  },
+  events: {
+    color: Colors.categoryColors.events,
+    bg: Colors.categoryBg.events,
+    icon: CalendarDays,
+    label: 'Events',
+  },
+  announcements: {
+    color: Colors.info,
+    bg: Colors.infoLight,
+    icon: Megaphone,
+    label: 'Notice',
+  },
+};
+
 export function NotificationCard({ notification, onPress }: Props) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-
-  const TYPE_CONFIG = {
-    academic: {
-      color: colors.academic,
-      bg: colors.academicLight,
-      icon: BookOpen,
-      label: 'Academic',
-    },
-    events: {
-      color: colors.categoryColors.events,
-      bg: colors.categoryBg.events,
-      icon: CalendarDays,
-      label: 'Events',
-    },
-    announcements: {
-      color: colors.info,
-      bg: colors.infoLight,
-      icon: Megaphone,
-      label: 'Notice',
-    },
-  };
-
   const cfg = TYPE_CONFIG[notification.type];
   const IconComponent = cfg.icon;
 
@@ -67,9 +63,9 @@ export function NotificationCard({ notification, onPress }: Props) {
   );
 }
 
-const makeStyles = (colors: typeof Colors) => StyleSheet.create({
+const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 14,
     padding: 14,
     flexDirection: 'row',
@@ -83,7 +79,7 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   },
   cardUnread: {
     borderLeftWidth: 3,
-    borderLeftColor: colors.primaryRed,
+    borderLeftColor: Colors.primaryRed,
   },
   iconBox: {
     width: 40,
@@ -97,16 +93,16 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   typeBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
   typeText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
-  time: { fontSize: 11, color: colors.textTertiary },
-  title: { fontSize: 14, fontWeight: '600', color: colors.textPrimary, marginBottom: 3 },
+  time: { fontSize: 11, color: Colors.textTertiary },
+  title: { fontSize: 14, fontWeight: '600', color: Colors.textPrimary, marginBottom: 3 },
   titleUnread: { fontWeight: '700' },
-  body: { fontSize: 13, color: colors.textSecondary, lineHeight: 18, marginBottom: 4 },
-  date: { fontSize: 11, color: colors.textTertiary },
+  body: { fontSize: 13, color: Colors.textSecondary, lineHeight: 18, marginBottom: 4 },
+  date: { fontSize: 11, color: Colors.textTertiary },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.primaryRed,
+    backgroundColor: Colors.primaryRed,
     flexShrink: 0,
     marginTop: 4,
   },

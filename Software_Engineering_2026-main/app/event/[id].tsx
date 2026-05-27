@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, MapPin, Clock, Calendar, Users, Bookmark, Share2, CircleCheck as CheckCircle, Tag, User } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
-import { useTheme } from '@/context/ThemeContext';
 import { MOCK_EVENTS } from '@/constants/mockData';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -25,8 +24,6 @@ const CATEGORY_LABELS: Record<string, string> = {
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const event = MOCK_EVENTS.find((e) => e.id === id);
 
@@ -44,8 +41,8 @@ export default function EventDetailScreen() {
     );
   }
 
-  const catColor = colors.categoryColors[event.category] ?? colors.primaryRed;
-  const catBg = colors.categoryBg[event.category] ?? colors.primaryRedLight;
+  const catColor = Colors.categoryColors[event.category] ?? Colors.primaryRed;
+  const catBg = Colors.categoryBg[event.category] ?? Colors.primaryRedLight;
   const label = CATEGORY_LABELS[event.category] ?? event.category;
 
   const dateObj = new Date(event.date);
@@ -111,7 +108,7 @@ export default function EventDetailScreen() {
             .map(({ icon: Icon, label: lbl, value }: any) => (
               <View key={lbl} style={styles.detailRow}>
                 <View style={styles.detailIcon}>
-                  <Icon size={16} color={colors.primaryRed} />
+                  <Icon size={16} color={Colors.primaryRed} />
                 </View>
                 <View style={styles.detailContent}>
                   <Text style={styles.detailLabel}>{lbl}</Text>
@@ -132,7 +129,7 @@ export default function EventDetailScreen() {
               )}
             </View>
             <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${Math.min(fillPercent, 100)}%`, backgroundColor: fillPercent > 85 ? colors.warning : colors.success }]} />
+              <View style={[styles.progressFill, { width: `${Math.min(fillPercent, 100)}%`, backgroundColor: fillPercent > 85 ? Colors.warning : Colors.success }]} />
             </View>
             <Text style={styles.attendeeText}>
               {event.attendees} of {event.capacity} people registered
@@ -148,7 +145,7 @@ export default function EventDetailScreen() {
         {event.tags && event.tags.length > 0 && (
           <View style={styles.tagsSection}>
             <View style={styles.tagsRow}>
-              <Tag size={14} color={colors.textTertiary} />
+              <Tag size={14} color={Colors.textTertiary} />
               <Text style={styles.tagsLabel}>Tags</Text>
             </View>
             <View style={styles.tagsList}>
@@ -163,7 +160,7 @@ export default function EventDetailScreen() {
 
         <View style={styles.organizerCard}>
           <View style={styles.orgIcon}>
-            <User size={20} color={colors.primaryRed} />
+            <User size={20} color={Colors.primaryRed} />
           </View>
           <View style={styles.orgContent}>
             <Text style={styles.orgName}>{event.organizer}</Text>
@@ -190,11 +187,11 @@ export default function EventDetailScreen() {
   );
 }
 
-const makeStyles = (colors: typeof Colors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  notFoundText: { fontSize: 16, color: colors.textSecondary },
-  backLink: { color: colors.primaryRed, fontSize: 15, fontWeight: '600' },
+  notFoundText: { fontSize: 16, color: Colors.textSecondary },
+  backLink: { color: Colors.primaryRed, fontSize: 15, fontWeight: '600' },
 
   heroContainer: { height: 280, position: 'relative' },
   heroImage: { width: '100%', height: '100%' },
@@ -228,12 +225,12 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   categoryChipText: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
 
   body: { padding: 20 },
-  title: { fontSize: 22, fontWeight: '800', color: colors.textPrimary, marginBottom: 6, lineHeight: 28 },
-  organizer: { fontSize: 13, color: colors.textSecondary, marginBottom: 20 },
-  organizerBold: { fontWeight: '700', color: colors.textPrimary },
+  title: { fontSize: 22, fontWeight: '800', color: Colors.textPrimary, marginBottom: 6, lineHeight: 28 },
+  organizer: { fontSize: 13, color: Colors.textSecondary, marginBottom: 20 },
+  organizerBold: { fontWeight: '700', color: Colors.textPrimary },
 
   detailCard: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 14,
@@ -243,22 +240,22 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  detailRow: { flexDirection: 'row', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.separator },
+  detailRow: { flexDirection: 'row', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.separator },
   detailIcon: {
     width: 34,
     height: 34,
     borderRadius: 9,
-    backgroundColor: colors.primaryRedLight,
+    backgroundColor: Colors.primaryRedLight,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   detailContent: { flex: 1, justifyContent: 'center' },
-  detailLabel: { fontSize: 11, color: colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 1 },
-  detailValue: { fontSize: 14, color: colors.textPrimary, fontWeight: '500' },
+  detailLabel: { fontSize: 11, color: Colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 1 },
+  detailValue: { fontSize: 14, color: Colors.textPrimary, fontWeight: '500' },
 
   capacityCard: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 14,
@@ -269,14 +266,14 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
     elevation: 2,
   },
   capacityHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  capacityTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary },
-  spotsLeft: { fontSize: 13, fontWeight: '600', color: colors.success },
-  progressBar: { height: 8, backgroundColor: colors.background, borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
+  capacityTitle: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary },
+  spotsLeft: { fontSize: 13, fontWeight: '600', color: Colors.success },
+  progressBar: { height: 8, backgroundColor: Colors.background, borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
   progressFill: { height: '100%', borderRadius: 4 },
-  attendeeText: { fontSize: 12, color: colors.textTertiary },
+  attendeeText: { fontSize: 12, color: Colors.textTertiary },
 
   descriptionCard: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 16,
     padding: 16,
     marginBottom: 14,
@@ -286,25 +283,25 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  descriptionTitle: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 10 },
-  description: { fontSize: 14, color: colors.textSecondary, lineHeight: 22 },
+  descriptionTitle: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary, marginBottom: 10 },
+  description: { fontSize: 14, color: Colors.textSecondary, lineHeight: 22 },
 
   tagsSection: { marginBottom: 14 },
   tagsRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
-  tagsLabel: { fontSize: 13, color: colors.textTertiary, fontWeight: '600' },
+  tagsLabel: { fontSize: 13, color: Colors.textTertiary, fontWeight: '600' },
   tagsList: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: Colors.cardBorder,
   },
-  tagText: { fontSize: 12, color: colors.textSecondary, fontWeight: '500' },
+  tagText: { fontSize: 12, color: Colors.textSecondary, fontWeight: '500' },
 
   organizerCard: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 16,
     padding: 14,
     flexDirection: 'row',
@@ -321,29 +318,29 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.primaryRedLight,
+    backgroundColor: Colors.primaryRedLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   orgContent: { flex: 1 },
-  orgName: { fontSize: 15, fontWeight: '700', color: colors.textPrimary },
-  orgRole: { fontSize: 12, color: colors.textTertiary, marginTop: 2 },
+  orgName: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
+  orgRole: { fontSize: 12, color: Colors.textTertiary, marginTop: 2 },
 
   actionRow: { gap: 12 },
   joinBtn: {
-    backgroundColor: colors.primaryRed,
+    backgroundColor: Colors.primaryRed,
     borderRadius: 14,
     height: 54,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
-    shadowColor: colors.primaryRed,
+    shadowColor: Colors.primaryRed,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
-  joinBtnActive: { backgroundColor: colors.success },
+  joinBtnActive: { backgroundColor: Colors.success },
   joinBtnText: { fontSize: 16, fontWeight: '700', color: '#fff' },
 });

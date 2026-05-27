@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
   StyleSheet, Platform, Alert,
@@ -10,6 +10,7 @@ import * as Linking from 'expo-linking';
 import * as DocumentPicker from 'expo-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
 
 const recipientEmail = 'impressio.estudiants@upf.edu';
 const STORAGE_KEY_ORIGIN_EMAIL = '@printer_origin_email';
@@ -30,6 +31,9 @@ type PdfFile = {
 
 export default function PrinterScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -72,8 +76,8 @@ export default function PrinterScreen() {
       if (result.canceled) return;
 
       const newFiles: PdfFile[] = result.assets
-        .filter((a) => a.mimeType === 'application/pdf' || a.name.toLowerCase().endsWith('.pdf'))
-        .map((a) => ({ name: a.name, uri: a.uri, size: a.size ?? undefined }));
+        .filter((a: DocumentPicker.DocumentPickerAsset) => a.mimeType === 'application/pdf' || a.name.toLowerCase().endsWith('.pdf'))
+        .map((a: DocumentPicker.DocumentPickerAsset) => ({ name: a.name, uri: a.uri, size: a.size ?? undefined }));
 
       if (newFiles.length === 0) {
         Alert.alert('Invalid format', 'Only PDF files are allowed.');
@@ -110,9 +114,7 @@ export default function PrinterScreen() {
 
     if (email.trim()) await saveOriginEmail(email.trim());
 
-    const formatLine = selectedFormat
-      ? `\nPrint format: ${selectedFormat}`
-      : '';
+    const formatLine = selectedFormat ? `\nPrint format: ${selectedFormat}` : '';
     const attachmentLine = pdfFiles.length > 0
       ? `\nAttached files: ${pdfFiles.map((f) => f.name).join(', ')}`
       : '';
@@ -137,9 +139,8 @@ export default function PrinterScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
 
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <ArrowLeft size={20} color="#fff" />
@@ -149,10 +150,9 @@ export default function PrinterScreen() {
       </View>
 
       <View style={styles.body}>
-        {/* Hero card */}
         <View style={styles.heroCard}>
           <View style={styles.heroIcon}>
-            <Mail size={20} color={Colors.primaryRed} />
+            <Mail size={20} color={colors.primaryRed} />
           </View>
           <Text style={styles.heroTitle}>Write your message</Text>
           <Text style={styles.heroSubtitle}>
@@ -160,7 +160,6 @@ export default function PrinterScreen() {
           </Text>
         </View>
 
-        {/* Form card */}
         <View style={styles.formCard}>
           <Text style={styles.label}>Name</Text>
           <TextInput
@@ -168,7 +167,7 @@ export default function PrinterScreen() {
             value={name}
             onChangeText={setName}
             placeholder="Your name"
-            placeholderTextColor={Colors.textTertiary}
+            placeholderTextColor={colors.textTertiary}
           />
 
           <Text style={styles.label}>From email</Text>
@@ -178,7 +177,7 @@ export default function PrinterScreen() {
             onChangeText={setEmail}
             onBlur={handleEmailBlur}
             placeholder="you@email.com"
-            placeholderTextColor={Colors.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             keyboardType="email-address"
             autoCapitalize="none"
           />
@@ -191,14 +190,14 @@ export default function PrinterScreen() {
             activeOpacity={0.8}
           >
             <View style={styles.dropdownRow}>
-              <Printer size={15} color={selectedFormat ? Colors.primaryRed : Colors.textTertiary} style={{ marginRight: 8 }} />
+              <Printer size={15} color={selectedFormat ? colors.primaryRed : colors.textTertiary} style={{ marginRight: 8 }} />
               <Text style={[styles.dropdownValue, !selectedFormat && styles.dropdownPlaceholder]}>
                 {selectedFormatLabel ?? 'Select a format…'}
               </Text>
             </View>
             {formatOpen
-              ? <ChevronUp size={16} color={Colors.textTertiary} />
-              : <ChevronDown size={16} color={Colors.textTertiary} />}
+              ? <ChevronUp size={16} color={colors.textTertiary} />
+              : <ChevronDown size={16} color={colors.textTertiary} />}
           </TouchableOpacity>
 
           {formatOpen && (
@@ -206,17 +205,11 @@ export default function PrinterScreen() {
               {PRINT_FORMATS.map((fmt) => (
                 <TouchableOpacity
                   key={fmt.value}
-                  style={[
-                    styles.dropdownItem,
-                    selectedFormat === fmt.value && styles.dropdownItemSelected,
-                  ]}
+                  style={[styles.dropdownItem, selectedFormat === fmt.value && styles.dropdownItemSelected]}
                   onPress={() => { setSelectedFormat(fmt.value); setFormatOpen(false); }}
                   activeOpacity={0.7}
                 >
-                  <Text style={[
-                    styles.dropdownItemText,
-                    selectedFormat === fmt.value && styles.dropdownItemTextSelected,
-                  ]}>
+                  <Text style={[styles.dropdownItemText, selectedFormat === fmt.value && styles.dropdownItemTextSelected]}>
                     {fmt.label}
                   </Text>
                 </TouchableOpacity>
@@ -231,13 +224,13 @@ export default function PrinterScreen() {
             <View style={styles.fileList}>
               {pdfFiles.map((file) => (
                 <View key={file.name} style={styles.fileItem}>
-                  <Paperclip size={14} color={Colors.primaryRed} style={{ marginRight: 8 }} />
+                  <Paperclip size={14} color={colors.primaryRed} style={{ marginRight: 8 }} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.fileName} numberOfLines={1}>{file.name}</Text>
                     {file.size ? <Text style={styles.fileSize}>{formatBytes(file.size)}</Text> : null}
                   </View>
                   <TouchableOpacity onPress={() => handleRemovePDF(file.name)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                    <X size={16} color={Colors.textTertiary} />
+                    <X size={16} color={colors.textTertiary} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -245,14 +238,14 @@ export default function PrinterScreen() {
           )}
 
           <TouchableOpacity style={styles.attachButton} onPress={handlePickPDF} activeOpacity={0.8}>
-            <Paperclip size={16} color={Colors.primaryRed} />
+            <Paperclip size={16} color={colors.primaryRed} />
             <Text style={styles.attachButtonText}>
               {pdfFiles.length === 0 ? 'Attach PDF' : 'Add another PDF'}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.attachNote}>
-            <Info size={13} color={Colors.textTertiary} />
+            <Info size={13} color={colors.textTertiary} />
             <Text style={styles.attachNoteText}>Only PDF files are accepted.</Text>
           </View>
 
@@ -263,7 +256,7 @@ export default function PrinterScreen() {
             value={message}
             onChangeText={setMessage}
             placeholder="Write what you need..."
-            placeholderTextColor={Colors.textTertiary}
+            placeholderTextColor={colors.textTertiary}
             multiline
             textAlignVertical="top"
           />
@@ -282,7 +275,7 @@ export default function PrinterScreen() {
           </TouchableOpacity>
 
           <View style={styles.noteBox}>
-            <Info size={16} color={Colors.primaryRed} />
+            <Info size={16} color={colors.primaryRed} />
             <Text style={styles.noteText}>
               Your email client will open to complete the sending. This method works on both web and mobile.
             </Text>
@@ -293,17 +286,13 @@ export default function PrinterScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
+const makeStyles = (colors: typeof Colors) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: 32 },
   header: {
-    backgroundColor: Colors.primaryRed,
-    paddingTop: 56,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    backgroundColor: colors.primaryRed,
+    paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 18,
@@ -312,94 +301,72 @@ const styles = StyleSheet.create({
   },
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
   body: { padding: 20 },
-
   heroCard: {
-    backgroundColor: Colors.card, borderRadius: 18, padding: 20, marginBottom: 20,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08, shadowRadius: 10, elevation: 2,
+    backgroundColor: colors.card, borderRadius: 18, padding: 20, marginBottom: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 2,
   },
   heroIcon: {
-    width: 42, height: 42, borderRadius: 14,
-    backgroundColor: Colors.primaryRedLight,
+    width: 42, height: 42, borderRadius: 14, backgroundColor: colors.primaryRedLight,
     alignItems: 'center', justifyContent: 'center', marginBottom: 14,
   },
-  heroTitle: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary, marginBottom: 8 },
-  heroSubtitle: { fontSize: 14, color: Colors.textSecondary, lineHeight: 20 },
-
+  heroTitle: { fontSize: 20, fontWeight: '800', color: colors.textPrimary, marginBottom: 8 },
+  heroSubtitle: { fontSize: 14, color: colors.textSecondary, lineHeight: 20 },
   formCard: {
-    backgroundColor: Colors.card, borderRadius: 18, padding: 20,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08, shadowRadius: 10, elevation: 2,
+    backgroundColor: colors.card, borderRadius: 18, padding: 20,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 2,
   },
-  label: {
-    fontSize: 12, fontWeight: '700', color: Colors.textTertiary,
-    textTransform: 'uppercase', marginBottom: 8,
-  },
+  label: { fontSize: 12, fontWeight: '700', color: colors.textTertiary, textTransform: 'uppercase', marginBottom: 8 },
   input: {
-    backgroundColor: Colors.background, borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: Platform.OS === 'web' ? 14 : 12,
-    color: Colors.textPrimary, fontSize: 15, marginBottom: 16,
-    borderWidth: 1, borderColor: Colors.separator,
+    backgroundColor: colors.background, borderRadius: 14,
+    paddingHorizontal: 16, paddingVertical: Platform.OS === 'web' ? 14 : 12,
+    color: colors.textPrimary, fontSize: 15, marginBottom: 16,
+    borderWidth: 1, borderColor: colors.separator,
   },
   textArea: { minHeight: 140, paddingTop: 14 },
-
-  dropdownTrigger: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-  },
+  dropdownTrigger: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   dropdownRow: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  dropdownValue: { fontSize: 15, color: Colors.textPrimary, flex: 1 },
-  dropdownPlaceholder: { color: Colors.textTertiary },
+  dropdownValue: { fontSize: 15, color: colors.textPrimary, flex: 1 },
+  dropdownPlaceholder: { color: colors.textTertiary },
   dropdownList: {
-    backgroundColor: Colors.card, borderRadius: 14,
-    borderWidth: 1, borderColor: Colors.separator,
+    backgroundColor: colors.card, borderRadius: 14,
+    borderWidth: 1, borderColor: colors.separator,
     marginTop: -10, marginBottom: 16, overflow: 'hidden',
   },
-  dropdownItem: {
-    paddingHorizontal: 16, paddingVertical: 13,
-    borderBottomWidth: 1, borderBottomColor: Colors.separator,
-  },
-  dropdownItemSelected: { backgroundColor: Colors.primaryRedLight },
-  dropdownItemText: { fontSize: 14, color: Colors.textPrimary },
-  dropdownItemTextSelected: { color: Colors.primaryRed, fontWeight: '700' },
-
+  dropdownItem: { paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: colors.separator },
+  dropdownItemSelected: { backgroundColor: colors.primaryRedLight },
+  dropdownItemText: { fontSize: 14, color: colors.textPrimary },
+  dropdownItemTextSelected: { color: colors.primaryRed, fontWeight: '700' },
   fileList: {
-    backgroundColor: Colors.background, borderRadius: 12,
-    borderWidth: 1, borderColor: Colors.separator,
-    marginBottom: 12, overflow: 'hidden',
+    backgroundColor: colors.background, borderRadius: 12,
+    borderWidth: 1, borderColor: colors.separator, marginBottom: 12, overflow: 'hidden',
   },
   fileItem: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 14, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: Colors.separator,
+    borderBottomWidth: 1, borderBottomColor: colors.separator,
   },
-  fileName: { fontSize: 14, color: Colors.textPrimary, fontWeight: '500' },
-  fileSize: { fontSize: 11, color: Colors.textTertiary, marginTop: 2 },
+  fileName: { fontSize: 14, color: colors.textPrimary, fontWeight: '500' },
+  fileSize: { fontSize: 11, color: colors.textTertiary, marginTop: 2 },
   attachButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    borderWidth: 1.5, borderColor: Colors.primaryRed, borderStyle: 'dashed',
+    borderWidth: 1.5, borderColor: colors.primaryRed, borderStyle: 'dashed',
     borderRadius: 14, paddingVertical: 13, marginBottom: 8,
-    backgroundColor: Colors.primaryRedLight,
+    backgroundColor: colors.primaryRedLight,
   },
-  attachButtonText: { fontSize: 14, fontWeight: '600', color: Colors.primaryRed },
-  attachNote: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16,
-  },
-  attachNoteText: { fontSize: 12, color: Colors.textTertiary },
-
+  attachButtonText: { fontSize: 14, fontWeight: '600', color: colors.primaryRed },
+  attachNote: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 },
+  attachNoteText: { fontSize: 12, color: colors.textTertiary },
   sendButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 10, backgroundColor: Colors.primaryRed,
-    borderRadius: 16, paddingVertical: 14, marginTop: 4,
+    gap: 10, backgroundColor: colors.primaryRed, borderRadius: 16, paddingVertical: 14, marginTop: 4,
   },
   sendButtonDisabled: { opacity: 0.6 },
   sendButtonText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  errorText: { color: Colors.primaryRed, marginBottom: 12, fontSize: 13 },
-  successText: { color: Colors.success, marginBottom: 12, fontSize: 13 },
+  errorText: { color: colors.primaryRed, marginBottom: 12, fontSize: 13 },
+  successText: { color: colors.success, marginBottom: 12, fontSize: 13 },
   noteBox: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
-    backgroundColor: Colors.primaryRedLight,
-    borderRadius: 14, padding: 14, marginTop: 18,
+    backgroundColor: colors.primaryRedLight, borderRadius: 14, padding: 14, marginTop: 18,
   },
-  noteText: { color: Colors.primaryRed, flex: 1, fontSize: 13, lineHeight: 18 },
+  noteText: { color: colors.primaryRed, flex: 1, fontSize: 13, lineHeight: 18 },
 });

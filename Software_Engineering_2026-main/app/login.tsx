@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -13,26 +13,16 @@ import {
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, CircleAlert as AlertCircle, Lock, User } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
-import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/colors';
 import { StatusBar } from 'expo-status-bar';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, isAuthenticated } = useAuth();
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace('/(tabs)');
-    }
-  }, [isAuthenticated, router]);
+  const { login } = useAuth();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -111,7 +101,7 @@ export default function LoginScreen() {
 
             {error ? (
               <View style={styles.errorBanner}>
-                <AlertCircle size={16} color={colors.primaryRed} />
+                <AlertCircle size={16} color={Colors.primaryRed} />
                 <Text style={styles.errorBannerText}>{error}</Text>
               </View>
             ) : null}
@@ -124,11 +114,11 @@ export default function LoginScreen() {
                   usernameError ? styles.inputWrapperError : null,
                 ]}
               >
-                <User size={18} color={colors.textTertiary} style={styles.inputIcon} />
+                <User size={18} color={Colors.textTertiary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="e.g. u123456"
-                  placeholderTextColor={colors.textTertiary}
+                  placeholderTextColor={Colors.textTertiary}
                   value={username}
                   onChangeText={handleUsernameChange}
                   autoCapitalize="none"
@@ -147,11 +137,11 @@ export default function LoginScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputWrapper}>
-                <Lock size={18} color={colors.textTertiary} style={styles.inputIcon} />
+                <Lock size={18} color={Colors.textTertiary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="Your UPF password"
-                  placeholderTextColor={colors.textTertiary}
+                  placeholderTextColor={Colors.textTertiary}
                   value={password}
                   onChangeText={(t) => {
                     setPassword(t);
@@ -166,9 +156,9 @@ export default function LoginScreen() {
                   style={styles.eyeButton}
                 >
                   {showPassword ? (
-                    <EyeOff size={18} color={colors.textTertiary} />
+                    <EyeOff size={18} color={Colors.textTertiary} />
                   ) : (
-                    <Eye size={18} color={colors.textTertiary} />
+                    <Eye size={18} color={Colors.textTertiary} />
                   )}
                 </TouchableOpacity>
               </View>
@@ -209,7 +199,7 @@ export default function LoginScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            <TouchableOpacity style={styles.helpButton} activeOpacity={0.7} onPress={() => router.push('/printer')}>
+            <TouchableOpacity style={styles.helpButton} activeOpacity={0.7}>
               <Text style={styles.helpButtonText}>Need help signing in?</Text>
             </TouchableOpacity>
           </View>
@@ -227,12 +217,12 @@ export default function LoginScreen() {
   );
 }
 
-const makeStyles = (colors: typeof Colors) => StyleSheet.create({
-  flex: { flex: 1, backgroundColor: colors.primaryRed },
+const styles = StyleSheet.create({
+  flex: { flex: 1, backgroundColor: Colors.primaryRed },
   scrollContent: { flexGrow: 1 },
 
   header: {
-    backgroundColor: colors.primaryRed,
+    backgroundColor: Colors.primaryRed,
     paddingTop: 72,
     paddingBottom: 40,
     alignItems: 'center',
@@ -255,7 +245,7 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   logoText: {
     fontSize: 26,
     fontWeight: '800',
-    color: colors.primaryRed,
+    color: Colors.primaryRed,
     letterSpacing: 1,
   },
   headerTitle: {
@@ -273,7 +263,7 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
 
   body: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: Colors.background,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingTop: 28,
@@ -282,7 +272,7 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   },
 
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 20,
     padding: 24,
     shadowColor: '#000',
@@ -294,12 +284,12 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   cardTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.textPrimary,
+    color: Colors.textPrimary,
     marginBottom: 6,
   },
   cardSubtitle: {
     fontSize: 14,
-    color: colors.textSecondary,
+    color: Colors.textSecondary,
     marginBottom: 20,
     lineHeight: 20,
   },
@@ -307,7 +297,7 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.primaryRedLight,
+    backgroundColor: Colors.primaryRedLight,
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
@@ -316,7 +306,7 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   errorBannerText: {
     flex: 1,
     fontSize: 13,
-    color: colors.primaryRed,
+    color: Colors.primaryRed,
     lineHeight: 18,
   },
 
@@ -324,7 +314,7 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.textSecondary,
+    color: Colors.textSecondary,
     marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -333,23 +323,23 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: colors.cardBorder,
+    borderColor: Colors.cardBorder,
     borderRadius: 12,
-    backgroundColor: colors.background,
+    backgroundColor: Colors.background,
     paddingHorizontal: 14,
     height: 50,
   },
-  inputWrapperError: { borderColor: colors.primaryRed },
+  inputWrapperError: { borderColor: Colors.primaryRed },
   inputIcon: { marginRight: 10 },
   input: {
     flex: 1,
     fontSize: 16,
-    color: colors.textPrimary,
+    color: Colors.textPrimary,
     height: '100%',
   },
   eyeButton: { padding: 4 },
-  fieldHint: { fontSize: 12, color: colors.textTertiary, marginTop: 5 },
-  fieldError: { fontSize: 12, color: colors.primaryRed, marginTop: 5 },
+  fieldHint: { fontSize: 12, color: Colors.textTertiary, marginTop: 5 },
+  fieldError: { fontSize: 12, color: Colors.primaryRed, marginTop: 5 },
 
   row: {
     flexDirection: 'row',
@@ -364,26 +354,26 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
     height: 20,
     borderRadius: 5,
     borderWidth: 1.5,
-    borderColor: colors.cardBorder,
+    borderColor: Colors.cardBorder,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
   },
   checkboxChecked: {
-    backgroundColor: colors.primaryRed,
-    borderColor: colors.primaryRed,
+    backgroundColor: Colors.primaryRed,
+    borderColor: Colors.primaryRed,
   },
   checkmark: { fontSize: 12, color: '#fff', fontWeight: '700' },
-  rememberText: { fontSize: 14, color: colors.textSecondary },
-  forgotText: { fontSize: 14, color: colors.primaryRed, fontWeight: '600' },
+  rememberText: { fontSize: 14, color: Colors.textSecondary },
+  forgotText: { fontSize: 14, color: Colors.primaryRed, fontWeight: '600' },
 
   loginButton: {
-    backgroundColor: colors.primaryRed,
+    backgroundColor: Colors.primaryRed,
     borderRadius: 12,
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.primaryRed,
+    shadowColor: Colors.primaryRed,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -399,17 +389,17 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
     marginBottom: 16,
     gap: 10,
   },
-  dividerLine: { flex: 1, height: 1, backgroundColor: colors.cardBorder },
-  dividerText: { fontSize: 13, color: colors.textTertiary },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.cardBorder },
+  dividerText: { fontSize: 13, color: Colors.textTertiary },
 
   helpButton: {
     alignItems: 'center',
     paddingVertical: 12,
   },
-  helpButtonText: { fontSize: 14, color: colors.textSecondary },
+  helpButtonText: { fontSize: 14, color: Colors.textSecondary },
 
   footer: { marginTop: 24, alignItems: 'center', gap: 6 },
-  footerText: { fontSize: 12, color: colors.textTertiary, textAlign: 'center' },
-  footerLink: { color: colors.primaryRed },
-  footerVersion: { fontSize: 11, color: colors.textTertiary },
+  footerText: { fontSize: 12, color: Colors.textTertiary, textAlign: 'center' },
+  footerLink: { color: Colors.primaryRed },
+  footerVersion: { fontSize: 11, color: Colors.textTertiary },
 });

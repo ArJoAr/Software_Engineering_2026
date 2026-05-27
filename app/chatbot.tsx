@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,8 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ChevronLeft, Send } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
@@ -25,7 +25,7 @@ interface Message {
 export default function ChatbotScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const styles = React.useMemo(() => makeStyles(colors), [colors]);
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -87,7 +87,7 @@ export default function ChatbotScreen() {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error occurred';
       console.error('Chatbot Error:', errorMsg, error);
-      
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: `Sorry, I encountered an error: ${errorMsg}`,
@@ -155,7 +155,7 @@ export default function ChatbotScreen() {
           <TextInput
             style={styles.input}
             placeholder="Ask something..."
-            placeholderTextColor="rgba(0,0,0,0.4)"
+            placeholderTextColor={colors.textTertiary}
             value={input}
             onChangeText={setInput}
             editable={!loading}
@@ -231,7 +231,7 @@ const makeStyles = (colors: typeof Colors) =>
     botBubble: {
       backgroundColor: colors.card,
       borderWidth: 1,
-      borderColor: 'rgba(0,0,0,0.08)',
+      borderColor: colors.cardBorder,
     },
     messageText: {
       fontSize: 14,
@@ -241,13 +241,13 @@ const makeStyles = (colors: typeof Colors) =>
       color: '#fff',
     },
     botText: {
-      color: '#000',
+      color: colors.textPrimary,
     },
     inputContainer: {
       paddingHorizontal: 16,
       paddingVertical: 12,
       borderTopWidth: 1,
-      borderTopColor: 'rgba(0,0,0,0.08)',
+      borderTopColor: colors.separator,
       backgroundColor: colors.background,
     },
     inputWrapper: {
@@ -263,7 +263,9 @@ const makeStyles = (colors: typeof Colors) =>
       paddingVertical: 10,
       maxHeight: 100,
       fontSize: 14,
-      color: '#000',
+      color: colors.textPrimary,
+      borderWidth: 1,
+      borderColor: colors.cardBorder,
     },
     sendButton: {
       width: 40,
