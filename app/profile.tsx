@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Image,
   StyleSheet,
   Switch,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -20,6 +21,8 @@ import {
   ChevronRight,
   User,
   Moon,
+  Edit2,
+  Check,
 } from 'lucide-react-native';
 
 import { Colors } from '@/constants/colors';
@@ -28,11 +31,28 @@ import { useTheme } from '@/context/ThemeContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { student, logout } = useAuth();
+  const { student, logout, updateProfile } = useAuth();
   
   // Mantenemos el sistema de temas dinámico de la rama MAIN
   const { colors, isDark, toggleTheme } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    email: student?.email || '',
+    degree: student?.degree || '',
+    faculty: student?.faculty || ''
+  });
+
+  useEffect(() => {
+    if (student) {
+      setEditData({
+        email: student.email || '',
+        degree: student.degree || '',
+        faculty: student.faculty || ''
+      });
+    }
+  }, [student]);
 
   const handleLogout = () => {
     logout();
@@ -55,7 +75,16 @@ export default function ProfileScreen() {
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Student Profile</Text>
-        <View style={{ width: 36 }} /> {/* Espaciador invisible para centrar el título */}
+        <TouchableOpacity style={styles.backBtn} onPress={() => {
+          if (isEditing) {
+            updateProfile(editData);
+            setIsEditing(false);
+          } else {
+            setIsEditing(true);
+          }
+        }}>
+          {isEditing ? <Check size={20} color="#fff" /> : <Edit2 size={20} color="#fff" />}
+        </TouchableOpacity>
       </View>
 
       {/* ─── HERO PROFILE (Estilo Main + Datos Seguros Feature) ─── */}
@@ -83,17 +112,43 @@ export default function ProfileScreen() {
       {/* ─── INFORMACIÓN ACADÉMICA ─── */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Academic Information</Text>
-        {infoRows.map(({ icon: Icon, label, value }) => (
-          <View key={label} style={styles.infoRow}>
-            <View style={styles.infoIcon}>
-              <Icon size={16} color={colors.primaryRed} />
+        {isEditing ? (
+          <View>
+            <View style={styles.infoRow}>
+              <View style={styles.infoIcon}><Mail size={16} color={colors.primaryRed} /></View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Institutional Email</Text>
+                <TextInput style={styles.editInput} value={editData.email} onChangeText={t => setEditData({...editData, email: t})} />
+              </View>
             </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>{label}</Text>
-              <Text style={styles.infoValue}>{value || 'Not Provided'}</Text>
+            <View style={styles.infoRow}>
+              <View style={styles.infoIcon}><GraduationCap size={16} color={colors.primaryRed} /></View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Degree</Text>
+                <TextInput style={styles.editInput} value={editData.degree} onChangeText={t => setEditData({...editData, degree: t})} />
+              </View>
+            </View>
+            <View style={styles.infoRow}>
+              <View style={styles.infoIcon}><Building size={16} color={colors.primaryRed} /></View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Faculty</Text>
+                <TextInput style={styles.editInput} value={editData.faculty} onChangeText={t => setEditData({...editData, faculty: t})} />
+              </View>
             </View>
           </View>
-        ))}
+        ) : (
+          infoRows.map(({ icon: Icon, label, value }) => (
+            <View key={label} style={styles.infoRow}>
+              <View style={styles.infoIcon}>
+                <Icon size={16} color={colors.primaryRed} />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>{label}</Text>
+                <Text style={styles.infoValue}>{value || 'Not Provided'}</Text>
+              </View>
+            </View>
+          ))
+        )}
       </View>
 
       {/* ─── PREFERENCIAS (Mantenemos el Dark Mode de Main) ─── */}
@@ -230,6 +285,7 @@ const makeStyles = (colors: any) => StyleSheet.create({
   infoContent: { flex: 1 },
   infoLabel: { fontSize: 11, color: colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 2 },
   infoValue: { fontSize: 14, color: colors.textPrimary, fontWeight: '500' },
+  editInput: { fontSize: 14, color: colors.textPrimary, fontWeight: '500', borderBottomWidth: 1, borderBottomColor: colors.primaryRedLight, paddingVertical: 2, paddingHorizontal: 4 },
 
   preferenceRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
