@@ -1,7 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/colors';
-import { useTheme } from '@/context/ThemeContext';
 
 interface Props {
   title: string;
@@ -12,9 +11,6 @@ interface Props {
 }
 
 export function QuickAccessCard({ title, icon, onPress, accentColor, badgeCount }: Props) {
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
       <View style={[styles.iconBox, accentColor ? { backgroundColor: accentColor + '18' } : null]}>
@@ -32,9 +28,9 @@ export function QuickAccessCard({ title, icon, onPress, accentColor, badgeCount 
   );
 }
 
-const makeStyles = (colors: typeof Colors) => StyleSheet.create({
+const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
@@ -53,14 +49,14 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primaryRedLight,
+    backgroundColor: Colors.primaryRedLight,
     position: 'relative',
   },
   badge: {
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: colors.primaryRed,
+    backgroundColor: Colors.primaryRed,
     borderRadius: 8,
     minWidth: 16,
     height: 16,
@@ -72,7 +68,7 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   title: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: Colors.textPrimary,
     textAlign: 'center',
     lineHeight: 16,
   },

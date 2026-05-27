@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
 import { useRouter } from 'expo-router';
 import { ArrowLeft, SlidersHorizontal } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
-import { useTheme } from '@/context/ThemeContext';
 import { MOCK_EVENTS } from '@/constants/mockData';
 import { EventCard } from '@/components/EventCard';
 import type { EventCategory } from '@/types';
@@ -26,8 +25,6 @@ const CATEGORIES: { key: EventCategory | 'all'; label: string }[] = [
 
 export default function EventsScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [selected, setSelected] = useState<EventCategory | 'all'>('all');
 
   const filtered =
@@ -129,11 +126,11 @@ export default function EventsScreen() {
   );
 }
 
-const makeStyles = (colors: typeof Colors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 24 },
   header: {
-    backgroundColor: colors.primaryRed,
+    backgroundColor: Colors.primaryRed,
     paddingTop: 56,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -151,7 +148,7 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
 
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: colors.primaryRedDark,
+    backgroundColor: Colors.primaryRedDark,
     paddingHorizontal: 20,
     paddingBottom: 20,
     paddingTop: 4,
@@ -168,27 +165,27 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   statValue: { fontSize: 22, fontWeight: '800', color: '#fff' },
   statLabel: { fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: '600', marginTop: 2 },
 
-  filterBar: { backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.separator },
+  filterBar: { backgroundColor: Colors.card, borderBottomWidth: 1, borderBottomColor: Colors.separator },
   filterContent: { paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
   filterChip: {
     paddingHorizontal: 16,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: colors.background,
+    backgroundColor: Colors.background,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: Colors.cardBorder,
   },
   filterChipActive: {
-    backgroundColor: colors.primaryRed,
-    borderColor: colors.primaryRed,
+    backgroundColor: Colors.primaryRed,
+    borderColor: Colors.primaryRed,
   },
-  filterChipText: { fontSize: 13, fontWeight: '600', color: colors.textSecondary },
+  filterChipText: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
   filterChipTextActive: { color: '#fff' },
 
   section: { padding: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 14 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary, marginBottom: 14 },
 
   emptyState: { alignItems: 'center', paddingVertical: 48 },
-  emptyTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 8 },
-  emptyText: { fontSize: 14, color: colors.textTertiary, textAlign: 'center' },
+  emptyTitle: { fontSize: 16, fontWeight: '700', color: Colors.textPrimary, marginBottom: 8 },
+  emptyText: { fontSize: 14, color: Colors.textTertiary, textAlign: 'center' },
 });
