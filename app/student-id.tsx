@@ -5,38 +5,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  ScrollView,
+  SafeAreaView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Wifi, Share2 } from 'lucide-react-native';
+import { ArrowLeft, ShieldCheck } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
-
-function QRPlaceholder({ colors }: { colors: typeof Colors }) {
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  return (
-    <View style={styles.qrBox}>
-      <View style={styles.qrInner}>
-        {Array.from({ length: 6 }).map((_, row) => (
-          <View key={row} style={styles.qrRow}>
-            {Array.from({ length: 6 }).map((_, col) => (
-              <View
-                key={col}
-                style={[
-                  styles.qrCell,
-                  (row + col) % 2 === 0 ? styles.qrCellDark : styles.qrCellLight,
-                  (row === 0 || row === 5) && (col === 0 || col === 5) ? styles.qrCorner : null,
-                ]}
-              />
-            ))}
-          </View>
-        ))}
-      </View>
-      <Text style={styles.qrLabel}>Scan to verify</Text>
-    </View>
-  );
-}
 
 export default function StudentIdScreen() {
   const router = useRouter();
@@ -44,236 +20,269 @@ export default function StudentIdScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
-  const currentYear = new Date().getFullYear();
-  const expiry = `${currentYear}/${currentYear + 1}`;
+  // Generamos el código QR dinámico usando la API basada en el ID/username del estudiante
+  const qrUrl = useMemo(() => {
+    const id = student?.studentIdNumber || 'u232107';
+    return `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${id}&color=003b46&qzone=1`;
+  }, [student?.studentIdNumber]);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
+    <SafeAreaView style={styles.container}>
+      {/* HEADER LIMPIO */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <ArrowLeft size={20} color="#fff" />
+          <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Student ID</Text>
-        <TouchableOpacity style={styles.backBtn}>
-          <Share2 size={18} color="#fff" />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Digital Student ID</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      <View style={styles.body}>
-        <Text style={styles.bodySubtitle}>Digital Student Card</Text>
-        <Text style={styles.bodyNote}>
-          Present this card at campus services, libraries, and partner institutions.
-        </Text>
-
+      {/* CONTENEDOR CENTRAL (SÓLO EL CARNET) */}
+      <View style={styles.centerWrapper}>
         <View style={styles.idCard}>
-          <View style={styles.idCardHeader}>
-            <View style={styles.idLogoBox}>
-              <Text style={styles.idLogoText}>UPF</Text>
+          
+          {/* FRANJA SUPERIOR CORPORATIVA UPF */}
+          <View style={styles.cardHeader}>
+            <View style={styles.upfLogoBadge}>
+              <Text style={styles.upfLogoText}>UPF</Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.idUniversity}>Universitat Pompeu Fabra</Text>
-              <Text style={styles.idCardType}>STUDENT CARD · {expiry}</Text>
-            </View>
-            <View style={styles.nfcIcon}>
-              <Wifi size={16} color="rgba(255,255,255,0.6)" />
-            </View>
-          </View>
-
-          <View style={styles.idCardBody}>
-            <Image source={{ uri: student?.photoUrl }} style={styles.idPhoto} />
-            <View style={styles.idInfo}>
-              <Text style={styles.idName}>{student?.fullName}</Text>
-              <Text style={styles.idRole}>{student?.role}</Text>
-              <Text style={styles.idDegree} numberOfLines={2}>{student?.degree}</Text>
-              <Text style={styles.idFaculty} numberOfLines={1}>{student?.faculty}</Text>
+            <View>
+              <Text style={styles.universityName}>Universitat Pompeu Fabra</Text>
+              <Text style={styles.universitySub}>STUDENT CARD</Text>
             </View>
           </View>
 
-          <View style={styles.idCardDivider} />
+          {/* CUERPO DEL CARNET */}
+          <View style={styles.cardBody}>
+            <View style={styles.metaRow}>
+              {/* IMAGEN DE PERFIL */}
+              {student?.photoUrl ? (
+                <Image source={{ uri: student.photoUrl }} style={styles.avatar} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Text style={styles.avatarPlaceholderText}>
+                    {student?.firstName?.[0]?.toUpperCase() || 'A'}
+                  </Text>
+                </View>
+              )}
 
-          <View style={styles.idCardFooter}>
-            <View style={styles.idDetail}>
-              <Text style={styles.idDetailLabel}>ID Number</Text>
-              <Text style={styles.idDetailValue}>{student?.studentIdNumber}</Text>
+              {/* DETALLES DEL ALUMNO */}
+              <View style={styles.infoDetails}>
+                <Text style={styles.studentName} numberOfLines={2}>
+                  {student?.fullName || 'Ainara Etxeberria'}
+                </Text>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>{student?.role || 'STUDENT'}</Text>
+                </View>
+                <Text style={styles.degreeText} numberOfLines={1}>
+                  {student?.degree || 'Data Science'}
+                </Text>
+              </View>
             </View>
-            <View style={styles.idDetailSep} />
-            <View style={styles.idDetail}>
-              <Text style={styles.idDetailLabel}>Username</Text>
-              <Text style={styles.idDetailValue}>{student?.username}</Text>
-            </View>
-            <View style={styles.idDetailSep} />
-            <View style={styles.idDetail}>
-              <Text style={styles.idDetailLabel}>Year</Text>
-              <Text style={styles.idDetailValue}>{student?.year}</Text>
+
+            {/* SEPARADOR SEGURO */}
+            <View style={styles.divider} />
+
+            {/* CÓDIGO QR REAL Y USUARIO */}
+            <View style={styles.qrSection}>
+              <View style={styles.qrFrame}>
+                <Image source={{ uri: qrUrl }} style={styles.qrImage} />
+              </View>
+              
+              <Text style={styles.userIdNumber}>
+                Username: {student?.studentIdNumber || 'u232107'}
+              </Text>
             </View>
           </View>
 
-          <View style={styles.stripBar}>
-            <View style={[styles.strip, { backgroundColor: 'rgba(255,255,255,0.1)' }]} />
-            <View style={[styles.strip, { backgroundColor: 'rgba(255,255,255,0.05)' }]} />
+          {/* PIE DE VERIFICACIÓN */}
+          <View style={styles.cardFooter}>
+            <ShieldCheck size={14} color="rgba(255,255,255,0.7)" />
+            <Text style={styles.footerText}>Official Campus ID</Text>
           </View>
-        </View>
 
-        <View style={styles.qrSection}>
-          <QRPlaceholder colors={colors} />
-          <Text style={styles.qrNote}>
-            This QR code is unique to your account and updates every 30 seconds.
-          </Text>
-        </View>
-
-        <View style={styles.infoCard}>
-          <Text style={styles.infoCardTitle}>Services included</Text>
-          {[
-            'Campus library access (all campuses)',
-            'Public transport discount card',
-            'UPF sports facilities',
-            'Partner museum & cultural access',
-            'UPF Benefits program',
-            'International student recognition (ISIC)',
-          ].map((s) => (
-            <View key={s} style={styles.infoItem}>
-              <View style={styles.infoDot} />
-              <Text style={styles.infoText}>{s}</Text>
-            </View>
-          ))}
         </View>
       </View>
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const makeStyles = (colors: typeof Colors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { paddingBottom: 32 },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
   header: {
-    backgroundColor: colors.primaryRed,
-    paddingTop: 56,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 40 : 12,
+    paddingBottom: 12,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
-
-  body: { padding: 20 },
-  bodySubtitle: { fontSize: 20, fontWeight: '700', color: colors.textPrimary, marginBottom: 6 },
-  bodyNote: { fontSize: 14, color: colors.textSecondary, lineHeight: 20, marginBottom: 24 },
-
-  idCard: {
-    borderRadius: 20,
-    backgroundColor: colors.primaryRed,
-    overflow: 'hidden',
-    shadowColor: colors.primaryRed,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 12,
-    marginBottom: 24,
-  },
-  idCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 18,
-    paddingBottom: 14,
-    backgroundColor: 'rgba(0,0,0,0.12)',
-  },
-  idLogoBox: {
     width: 40,
     height: 40,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    borderColor: colors.cardBorder,
   },
-  idLogoText: { fontSize: 14, fontWeight: '900', color: '#fff', letterSpacing: 0.5 },
-  idUniversity: { fontSize: 13, fontWeight: '700', color: '#fff' },
-  idCardType: { fontSize: 10, color: 'rgba(255,255,255,0.65)', marginTop: 2, letterSpacing: 0.5, fontWeight: '600' },
-  nfcIcon: { opacity: 0.7 },
-
-  idCardBody: { flexDirection: 'row', gap: 14, padding: 18, alignItems: 'flex-start' },
-  idPhoto: {
-    width: 80,
-    height: 100,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.4)',
-  },
-  idInfo: { flex: 1, paddingTop: 4 },
-  idName: { fontSize: 15, fontWeight: '800', color: '#fff', marginBottom: 3 },
-  idRole: { fontSize: 10, color: 'rgba(255,255,255,0.65)', fontWeight: '700', letterSpacing: 0.7, marginBottom: 8, textTransform: 'uppercase' },
-  idDegree: { fontSize: 12, color: 'rgba(255,255,255,0.85)', lineHeight: 16, marginBottom: 4 },
-  idFaculty: { fontSize: 11, color: 'rgba(255,255,255,0.65)', lineHeight: 15 },
-
-  idCardDivider: { height: 1, backgroundColor: 'rgba(255,255,255,0.15)', marginHorizontal: 18 },
-  idCardFooter: {
-    flexDirection: 'row',
-    padding: 16,
-    gap: 0,
-  },
-  idDetail: { flex: 1, alignItems: 'center' },
-  idDetailLabel: { fontSize: 9, color: 'rgba(255,255,255,0.55)', fontWeight: '600', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 3 },
-  idDetailValue: { fontSize: 13, color: '#fff', fontWeight: '700' },
-  idDetailSep: { width: 1, backgroundColor: 'rgba(255,255,255,0.2)', marginVertical: 4 },
-  stripBar: { height: 8, flexDirection: 'row' },
-  strip: { flex: 1 },
-
-  qrSection: { alignItems: 'center', marginBottom: 24 },
-  qrBox: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 3,
-    marginBottom: 12,
-  },
-  qrInner: { gap: 2, marginBottom: 10 },
-  qrRow: { flexDirection: 'row', gap: 2 },
-  qrCell: { width: 18, height: 18, borderRadius: 2 },
-  qrCellDark: { backgroundColor: colors.textPrimary },
-  qrCellLight: { backgroundColor: colors.cardBorder },
-  qrCorner: { borderRadius: 4, borderWidth: 2, borderColor: colors.primaryRed },
-  qrLabel: { fontSize: 12, color: colors.textTertiary, fontWeight: '600' },
-  qrNote: { fontSize: 12, color: colors.textTertiary, textAlign: 'center', lineHeight: 17, paddingHorizontal: 20 },
-
-  infoCard: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  infoCardTitle: {
-    fontSize: 13,
+  headerTitle: {
+    fontSize: 18,
     fontWeight: '700',
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: 14,
+    color: colors.textPrimary,
   },
-  infoItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 7 },
-  infoDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.primaryRed, flexShrink: 0 },
-  infoText: { fontSize: 14, color: colors.textPrimary },
+  centerWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  idCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: colors.card,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  cardHeader: {
+    backgroundColor: '#c91424', // Color corporativo oficial de la UPF
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  upfLogoBadge: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  upfLogoText: {
+    color: '#c91424',
+    fontWeight: '900',
+    fontSize: 14,
+  },
+  universityName: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  universitySub: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  cardBody: {
+    padding: 24,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    gap: 16,
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: '#c91424',
+  },
+  avatarPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 14,
+    backgroundColor: colors.primaryRedLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: colors.primaryRed,
+  },
+  avatarPlaceholderText: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: colors.primaryRed,
+  },
+  infoDetails: {
+    flex: 1,
+    gap: 3,
+  },
+  studentName: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  badge: {
+    backgroundColor: colors.primaryRedLight,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: colors.primaryRed,
+    letterSpacing: 0.3,
+  },
+  degreeText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.cardBorder,
+    marginVertical: 20,
+    borderStyle: 'dashed',
+  },
+  qrSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  qrFrame: {
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  qrImage: {
+    width: 145,
+    height: 145,
+  },
+  userIdNumber: {
+    fontSize: 13,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    color: colors.textTertiary,
+    fontWeight: '700',
+  },
+  cardFooter: {
+    backgroundColor: '#003b46', // Cierre en contraste estético y seguro
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  footerText: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 11,
+    fontWeight: '600',
+  },
 });
