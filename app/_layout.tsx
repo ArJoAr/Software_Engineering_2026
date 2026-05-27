@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { EventProvider } from '@/context/EventContext';
 import { useEffect } from 'react';
 
 function AppStack() {
@@ -50,7 +51,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppStack />
+        <EventProvider>
+          <AppStack />
+        </EventProvider>
       </AuthProvider>
     </ThemeProvider>
   );

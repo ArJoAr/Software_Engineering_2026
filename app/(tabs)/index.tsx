@@ -11,7 +11,6 @@ import { useRouter } from 'expo-router';
 import {
   CreditCard,
   CalendarDays,
-  Globe,
   BookOpen,
   Gift,
   ChevronRight,
@@ -29,8 +28,7 @@ import { EventCard } from '@/components/EventCard';
 const QUICK_ACCESS = [
   { id: 'student-id', title: 'My Student ID', icon: CreditCard, route: '/student-id', color: Colors.primaryRed },
   { id: 'calendar', title: 'My Calendar', icon: CalendarDays, route: '/calendar', color: Colors.info },
-  { id: 'campus-global', title: 'Campus Global', icon: Globe, route: '/academic', color: Colors.categoryColors.conference },
-  { id: 'aula-global', title: 'Aula Global', icon: BookOpen, route: '/academic', color: Colors.academic },
+  { id: 'academics', title: 'Academics', icon: BookOpen, route: '/academic', color: Colors.academic },
   { id: 'chatbot', title: 'Chatbot', icon: MessageCircle, route: '/chatbot', color: Colors.warning },
   { id: 'benefits', title: 'UPF Benefits', icon: Gift, route: '/highlights', color: Colors.success },
   { id: 'events', title: 'Campus Events', icon: Ticket, route: '/events', color: Colors.categoryColors.events },
