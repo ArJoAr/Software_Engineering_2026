@@ -58,7 +58,6 @@ const MONTHS      = [
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-// FIXED: Generates local YYYY-MM-DD instead of switching to UTC via toISOString
 function toDateStr(d: Date) {
   const pad = (n: number) => n.toString().padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -145,14 +144,58 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
   const [location, setLocation] = useState('');
   const [subject, setSubject]   = useState('');
   const [type, setType]         = useState<EventType>('class');
+  
+  // Estado para pintar el error en el formulario de forma visual
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const reset = () => {
     setTitle(''); setDate(defaultDate); setTime('10:00');
     setEndTime(''); setLocation(''); setSubject(''); setType('class');
+    setErrorMsg(null);
+  };
+
+  // Validador de formato de hora realista (00:00 a 23:59)
+  const isValidTimeFormat = (timeStr: string) => {
+    const regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return regex.test(timeStr.trim());
   };
 
   const handleAdd = () => {
     if (!title.trim() || !date.trim() || !time.trim()) return;
+    setErrorMsg(null);
+
+    // 1. Validar formato de hora de inicio
+    if (!isValidTimeFormat(time)) {
+      const msg = "Start time is unrealistic (use HH:MM format from 00:00 to 23:59)";
+      setErrorMsg(msg);
+      Alert.alert("Invalid Schedule", msg);
+      return;
+    }
+
+    // 2. Validar hora de fin si se ha introducido una
+    if (endTime.trim().length > 0) {
+      if (!isValidTimeFormat(endTime)) {
+        const msg = "End time is unrealistic (use HH:MM format from 00:00 to 23:59)";
+        setErrorMsg(msg);
+        Alert.alert("Invalid Schedule", msg);
+        return;
+      }
+
+      // 3. Comprobar que la hora de fin NO sea anterior o igual a la de inicio
+      const [startHours, startMinutes] = time.split(':').map(Number);
+      const [endHours, endMinutes] = endTime.split(':').map(Number);
+
+      const startTotalMinutes = startHours * 60 + startMinutes;
+      const endTotalMinutes = endHours * 60 + endMinutes;
+
+      if (endTotalMinutes <= startTotalMinutes) {
+        const msg = "End time cannot be earlier than or equal to start time.";
+        setErrorMsg(msg);
+        Alert.alert("Unrealistic Hours", msg);
+        return;
+      }
+    }
+
     onAdd({
       id: genId(),
       title: title.trim(),
@@ -217,18 +260,20 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
 
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Start time *</Text>
-                <TextInput style={styles.input} placeholder="10:00" placeholderTextColor={Colors.textTertiary} value={time} onChangeText={setTime} keyboardType="numeric" />
+                <Text style={styles.fieldLabel}>Start time * (HH:MM)</Text>
+                <TextInput style={[styles.input, errorMsg && styles.inputError]} placeholder="10:00" placeholderTextColor={Colors.textTertiary} value={time} onChangeText={setTime} />
               </View>
               <View style={{ width: 12 }} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>End time</Text>
-                <TextInput style={styles.input} placeholder="12:00" placeholderTextColor={Colors.textTertiary} value={endTime} onChangeText={setEndTime} keyboardType="numeric" />
+                <Text style={styles.fieldLabel}>End time (HH:MM)</Text>
+                <TextInput style={[styles.input, errorMsg && styles.inputError]} placeholder="12:00" placeholderTextColor={Colors.textTertiary} value={endTime} onChangeText={setEndTime} />
               </View>
             </View>
 
-            <Text style={styles.fieldLabel}>Location</Text>
-            <TextInput style={styles.input} placeholder="e.g. Room 52.S31" placeholderTextColor={Colors.textTertiary} value={location} onChangeText={setLocation} />
+            {/* Aviso dinámico de texto de error en rojo */}
+            {errorMsg && (
+              <Text style={styles.errorTextAlert}>{errorMsg}</Text>
+            )}
 
             <TouchableOpacity
               style={[styles.addBtn, (!title.trim() || !date.trim() || !time.trim()) && styles.addBtnDisabled]}
@@ -667,6 +712,8 @@ const styles = StyleSheet.create({
   modalCloseBtn: { padding: 4 },
   fieldLabel: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6, marginTop: 14 },
   input: { backgroundColor: Colors.background, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: Colors.textPrimary, borderWidth: 1, borderColor: Colors.cardBorder },
+  inputError: { borderColor: Colors.primaryRed, borderWidth: 1.5 },
+  errorTextAlert: { color: Colors.primaryRed, fontSize: 13, fontWeight: '600', marginTop: 8, textAlign: 'center' },
   typeRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   typeChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5 },
   typeChipText: { fontSize: 13, fontWeight: '600' },
