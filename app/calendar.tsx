@@ -390,6 +390,7 @@ export default function CalendarScreen() {
 
   useEffect(() => {
     checkExistingGoogleSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkExistingGoogleSession = async () => {

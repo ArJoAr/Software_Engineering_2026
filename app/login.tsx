@@ -11,7 +11,7 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Eye, EyeOff, CircleAlert as AlertCircle, Lock, User } from 'lucide-react-native';
+import { Eye, EyeOff, CircleAlert as AlertCircle, Lock, User, Mail } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/colors';
@@ -19,7 +19,7 @@ import { StatusBar } from 'expo-status-bar';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, isAuthenticated } = useAuth();
+  const { login, register, isAuthenticated } = useAuth();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -37,6 +37,8 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [usernameError, setUsernameError] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [email, setEmail] = useState('');
 
   const validateUsername = (value: string) => {
     if (value.length === 0) {
@@ -58,7 +60,7 @@ export default function LoginScreen() {
     if (error) setError('');
   };
 
-  const handleLogin = async () => {
+  const handleSubmit = async () => {
     if (!username.trim()) {
       setError('Please enter your institutional username.');
       return;
@@ -67,14 +69,26 @@ export default function LoginScreen() {
       setError('Please enter your password.');
       return;
     }
+    if (isRegistering && !email.trim()) {
+      setError('Please enter your email.');
+      return;
+    }
 
     setLoading(true);
     setError('');
-    const result = await login(username.trim(), password);
+    
+    const result = isRegistering 
+      ? await register(username.trim(), password, email.trim()) 
+      : await login(username.trim(), password);
+      
     setLoading(false);
 
     if (result.success) {
-      router.replace('/(tabs)');
+      if (result.needsOnboarding) {
+        router.replace('/onboarding' as any);
+      } else {
+        router.replace('/(tabs)');
+      }
     } else {
       setError(result.error || 'Authentication failed.');
     }
@@ -104,7 +118,7 @@ export default function LoginScreen() {
 
         <View style={styles.body}>
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Sign in</Text>
+            <Text style={styles.cardTitle}>{isRegistering ? 'Create Account' : 'Sign in'}</Text>
             <Text style={styles.cardSubtitle}>
               Use your institutional UPF account to access student services.
             </Text>
@@ -144,6 +158,25 @@ export default function LoginScreen() {
               )}
             </View>
 
+            {isRegistering && (
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Email</Text>
+                <View style={styles.inputWrapper}>
+                  <Mail size={18} color={Colors.textTertiary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Your email address"
+                    placeholderTextColor={Colors.textTertiary}
+                    value={email}
+                    onChangeText={(t) => { setEmail(t); if (error) setError(''); }}
+                    autoCapitalize="none"
+                    keyboardType="email-address"
+                    returnKeyType="next"
+                  />
+                </View>
+              </View>
+            )}
+
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputWrapper}>
@@ -159,7 +192,7 @@ export default function LoginScreen() {
                   }}
                   secureTextEntry={!showPassword}
                   returnKeyType="done"
-                  onSubmitEditing={handleLogin}
+                  onSubmitEditing={handleSubmit}
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
@@ -192,14 +225,14 @@ export default function LoginScreen() {
 
             <TouchableOpacity
               style={[styles.loginButton, loading && styles.loginButtonDisabled]}
-              onPress={handleLogin}
+              onPress={handleSubmit}
               disabled={loading}
               activeOpacity={0.85}
             >
               {loading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.loginButtonText}>Sign in</Text>
+                <Text style={styles.loginButtonText}>{isRegistering ? 'Register' : 'Sign in'}</Text>
               )}
             </TouchableOpacity>
 
@@ -209,8 +242,8 @@ export default function LoginScreen() {
               <View style={styles.dividerLine} />
             </View>
 
-            <TouchableOpacity style={styles.helpButton} activeOpacity={0.7} onPress={() => router.push('/printer')}>
-              <Text style={styles.helpButtonText}>Need help signing in?</Text>
+            <TouchableOpacity style={styles.helpButton} activeOpacity={0.7} onPress={() => { setIsRegistering(!isRegistering); setError(''); }}>
+              <Text style={styles.helpButtonText}>{isRegistering ? 'Already have an account? Sign in' : 'No account? Create one'}</Text>
             </TouchableOpacity>
           </View>
 

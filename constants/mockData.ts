@@ -11,7 +11,7 @@ export const MOCK_STUDENT: Student = {
   faculty: 'Faculty of Communication',
   year: 3,
   email: 'u123456@upf.edu',
-  photoUrl: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=200',
+  photoUrl: '',
   studentIdNumber: '10483726',
   enrollmentDate: '2022-09-12',
   campus: 'Comunicació-Poblenou',

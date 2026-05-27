@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Image,
   StyleSheet,
   Switch,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
@@ -20,30 +21,64 @@ import {
   ChevronRight,
   User,
   Moon,
+  Edit2,
+  Check,
+  Camera,
 } from 'lucide-react-native';
 
-import { Colors } from '@/constants/colors';
+import * as ImagePicker from 'expo-image-picker';
+
+
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { student, logout } = useAuth();
+  const { student, logout, updateProfile } = useAuth();
   
   // Mantenemos el sistema de temas dinámico de la rama MAIN
   const { colors, isDark, toggleTheme } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    email: student?.email || '',
+    degree: student?.degree || '',
+    faculty: student?.faculty || ''
+  });
+
+  useEffect(() => {
+    if (student) {
+      setEditData({
+        email: student.email || '',
+        degree: student.degree || '',
+        faculty: student.faculty || ''
+      });
+    }
+  }, [student]);
 
   const handleLogout = () => {
     logout();
     router.replace('/login');
   };
 
-  // Mantenemos tus tipos seguros de la rama FEATURE
+  const handlePickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      updateProfile({ photoUrl: result.assets[0].uri });
+    }
+  };
+
   const infoRows = [
     { icon: User, label: 'Student ID', value: student?.studentIdNumber },
     { icon: Mail, label: 'Institutional Email', value: student?.email },
-    { icon: GraduationCap, label: 'Degree', value: student?.degree },
+    ...(student?.role !== 'TEACHER' ? [{ icon: GraduationCap, label: 'Degree', value: student?.degree }] : []),
     { icon: Building, label: 'Faculty', value: student?.faculty },
   ];
 
@@ -54,46 +89,98 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Student Profile</Text>
-        <View style={{ width: 36 }} /> {/* Espaciador invisible para centrar el título */}
+        <Text style={styles.headerTitle}>{student?.role === 'TEACHER' ? 'Teacher Profile' : 'Student Profile'}</Text>
+        <TouchableOpacity style={styles.backBtn} onPress={async () => {
+          if (isEditing) {
+            const res = await updateProfile(editData);
+            if (res && !res.success) {
+              alert(res.error);
+            } else {
+              setIsEditing(false);
+            }
+          } else {
+            setIsEditing(true);
+          }
+        }}>
+          {isEditing ? <Check size={20} color="#fff" /> : <Edit2 size={20} color="#fff" />}
+        </TouchableOpacity>
       </View>
 
       {/* ─── HERO PROFILE (Estilo Main + Datos Seguros Feature) ─── */}
       <View style={styles.profileHero}>
-        <View style={styles.avatarWrapper}>
-          <Image
-            source={{
-              uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
-            }}
-            style={styles.avatar}
-          />
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>STUDENT</Text>
+        <TouchableOpacity style={styles.avatarWrapper} onPress={handlePickImage} activeOpacity={0.85}>
+          {student?.photoUrl ? (
+            <Image
+              source={{ uri: student.photoUrl }}
+              style={styles.avatar}
+            />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }]}>
+              <Text style={{ fontSize: 36, color: '#fff', fontWeight: 'bold' }}>
+                {student?.firstName?.[0]?.toUpperCase() || 'U'}
+              </Text>
+            </View>
+          )}
+          <View style={{ position: 'absolute', bottom: -5, left: 10, backgroundColor: colors.primaryRed, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.background, zIndex: 10 }}>
+            <Camera size={14} color="#fff" />
           </View>
-        </View>
-        {/* Usamos split('@') para sacar el nombre del correo, evitando el error de fullName */}
-        <Text style={styles.fullName}>{student?.email?.split('@')[0] || 'Student'}</Text>
+          <View style={styles.roleBadge}>
+            <Text style={styles.roleBadgeText}>{student?.role || 'STUDENT'}</Text>
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.fullName}>{student?.fullName || 'User'}</Text>
         <Text style={styles.username}>ID: {student?.studentIdNumber || 'N/A'}</Text>
-        <View style={styles.yearPill}>
-          <GraduationCap size={13} color={colors.primaryRed} />
-          <Text style={styles.yearPillText}>{student?.degree || 'Academic Program'}</Text>
-        </View>
+        
+        {student?.role !== 'TEACHER' && (
+          <View style={styles.yearPill}>
+            <GraduationCap size={13} color={colors.primaryRed} />
+            <Text style={styles.yearPillText}>{student?.degree || 'Academic Program'}</Text>
+          </View>
+        )}
       </View>
 
       {/* ─── INFORMACIÓN ACADÉMICA ─── */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Academic Information</Text>
-        {infoRows.map(({ icon: Icon, label, value }) => (
-          <View key={label} style={styles.infoRow}>
-            <View style={styles.infoIcon}>
-              <Icon size={16} color={colors.primaryRed} />
+        {isEditing ? (
+          <View>
+            <View style={styles.infoRow}>
+              <View style={styles.infoIcon}><Mail size={16} color={colors.primaryRed} /></View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Institutional Email</Text>
+                <TextInput style={styles.editInput} value={editData.email} onChangeText={t => setEditData({...editData, email: t})} />
+              </View>
             </View>
-            <View style={styles.infoContent}>
-              <Text style={styles.infoLabel}>{label}</Text>
-              <Text style={styles.infoValue}>{value || 'Not Provided'}</Text>
+            {student?.role !== 'TEACHER' && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoIcon}><GraduationCap size={16} color={colors.primaryRed} /></View>
+                <View style={styles.infoContent}>
+                  <Text style={styles.infoLabel}>Degree</Text>
+                  <TextInput style={styles.editInput} value={editData.degree} onChangeText={t => setEditData({...editData, degree: t})} />
+                </View>
+              </View>
+            )}
+            <View style={styles.infoRow}>
+              <View style={styles.infoIcon}><Building size={16} color={colors.primaryRed} /></View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Faculty</Text>
+                <TextInput style={styles.editInput} value={editData.faculty} onChangeText={t => setEditData({...editData, faculty: t})} />
+              </View>
             </View>
           </View>
-        ))}
+        ) : (
+          infoRows.map(({ icon: Icon, label, value }) => (
+            <View key={label} style={styles.infoRow}>
+              <View style={styles.infoIcon}>
+                <Icon size={16} color={colors.primaryRed} />
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>{label}</Text>
+                <Text style={styles.infoValue}>{value || 'Not Provided'}</Text>
+              </View>
+            </View>
+          ))
+        )}
       </View>
 
       {/* ─── PREFERENCIAS (Mantenemos el Dark Mode de Main) ─── */}
@@ -230,6 +317,7 @@ const makeStyles = (colors: any) => StyleSheet.create({
   infoContent: { flex: 1 },
   infoLabel: { fontSize: 11, color: colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 2 },
   infoValue: { fontSize: 14, color: colors.textPrimary, fontWeight: '500' },
+  editInput: { fontSize: 14, color: colors.textPrimary, fontWeight: '500', borderBottomWidth: 1, borderBottomColor: colors.primaryRedLight, paddingVertical: 2, paddingHorizontal: 4 },
 
   preferenceRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },

@@ -77,10 +77,20 @@ export default function HomeScreen() {
         </View>
 
         <TouchableOpacity style={styles.welcomeCard} onPress={() => router.push('/profile')} activeOpacity={0.85}>
-          <Image source={{ uri: student?.photoUrl }} style={styles.avatar} />
+          {student?.photoUrl ? (
+            <Image source={{ uri: student.photoUrl }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }]}>
+              <Text style={{ fontSize: 24, color: '#fff', fontWeight: 'bold' }}>
+                {student?.firstName?.[0]?.toUpperCase() || 'U'}
+              </Text>
+            </View>
+          )}
           <View style={styles.welcomeText}>
             <Text style={styles.welcomeGreet}>Hello, {student?.firstName ?? 'Student'}</Text>
-            <Text style={styles.welcomeRole}>{student?.role} · {student?.degree?.split(' ').slice(0, 3).join(' ')}</Text>
+            <Text style={styles.welcomeRole}>
+              {student?.role}{student?.role !== 'TEACHER' && student?.degree ? ` · ${student.degree.split(' ').slice(0, 3).join(' ')}` : ''}
+            </Text>
             <Text style={styles.welcomeEmail}>{student?.email}</Text>
           </View>
           <ChevronRight size={20} color="rgba(255,255,255,0.7)" />
