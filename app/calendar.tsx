@@ -37,10 +37,8 @@ import { Colors } from '@/constants/colors';
 import { MOCK_CALENDAR } from '@/constants/mockData';
 import type { CalendarEvent } from '@/types';
 
-// Asegura que el navegador se cierre al autenticar en dispositivos móviles
 WebBrowser.maybeCompleteAuthSession();
 
-// ─── Supabase Configuration ──────────────────────────────────────────────────
 const supabaseUrl = 'https://prrtyicplljeyqpuhnpf.supabase.co';
 const supabaseAnonKey = 'sb_publishable__CfchfHgr_hvXH5uuzWrIw_bdADyLxU'; 
 
@@ -48,7 +46,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const TYPE_STYLES: Record<string, { color: string; bg: string; label: string }> = {
+interface TypeStyleConfig {
+  color: string;
+  bg: string;
+  label: string;
+}
+
+const TYPE_STYLES: Record<string, TypeStyleConfig> = {
   class:    { color: Colors.info,                    bg: Colors.infoLight,      label: 'Class' },
   exam:     { color: Colors.primaryRed,              bg: Colors.primaryRedLight, label: 'Exam' },
   deadline: { color: Colors.warning,                 bg: Colors.warningLight,   label: 'Deadline' },
@@ -100,7 +104,6 @@ function genId() {
   return 'u' + Math.random().toString(36).slice(2, 9);
 }
 
-// ─── UPF iCalendar Parser Helper ─────────────────────────────────────────────
 function parseICSString(text: string): CalendarEvent[] {
   const events: CalendarEvent[] = [];
   const cleanText = text.replace(/\r/g, '');
@@ -144,7 +147,7 @@ function parseICSString(text: string): CalendarEvent[] {
         title = title.split('|')[0].trim();
       }
 
-      const isExam = summaryMatch[1].toLowerCase().includes('exam');
+      const isExam = summaryMatch[1].toLowerCase().includes('exam') || title.toLowerCase().includes('exam');
       const eventType = isExam ? 'exam' : 'class';
 
       events.push({
@@ -279,7 +282,6 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
 
   const handleClose = () => { reset(); onClose(); };
 
-  // Filtrado explícito para evitar problemas de tipado implícito en TypeScript
   const allowedKeys: EventType[] = ['class', 'exam', 'deadline', 'event'];
 
   return (
@@ -837,8 +839,13 @@ export default function CalendarScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  content:   { paddingBottom: 100 },
+  container: { 
+    flex: 1, 
+    backgroundColor: Colors.background 
+  },
+  content: { 
+    paddingBottom: 100 
+  },
   header: {
     backgroundColor: Colors.primaryRed,
     paddingTop: 56,
@@ -848,9 +855,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  addHeaderBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
+  backBtn: { 
+    width: 36, 
+    height: 36, 
+    borderRadius: 18, 
+    backgroundColor: 'rgba(255,255,255,0.2)', 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  addHeaderBtn: { 
+    width: 36, 
+    height: 36, 
+    borderRadius: 18, 
+    backgroundColor: 'rgba(255,255,255,0.2)', 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  headerTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#fff' 
+  },
+  
   googleSyncBtn: {
     backgroundColor: '#4285F4',
     marginHorizontal: 20,
@@ -869,7 +895,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#2E7D32',
     shadowColor: '#2E7D32',
   },
-  googleSyncBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  googleSyncBtnText: { 
+    color: '#fff', 
+    fontWeight: '700', 
+    fontSize: 14 
+  },
+  
   upfSyncBtn: {
     backgroundColor: '#003B46',
     marginHorizontal: 20,
@@ -882,86 +913,444 @@ const styles = StyleSheet.create({
   upfSyncBtnConnected: {
     backgroundColor: '#2E7D32',
   },
-  upfSyncBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  
-  // ESTILOS DE LA GUÍA OFICIAL FALTANTES RECONSTRUIDOS
-  guideOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
-  guideSheet: { backgroundColor: Colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '85%' },
-  guideHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  guideTitle: { fontSize: 16, fontWeight: '700', color: '#003B46', flex: 1, marginRight: 10, lineHeight: 22 },
-  guideCloseBtn: { padding: 4, backgroundColor: Colors.background, borderRadius: 16 },
-  stepBlock: { flexDirection: 'row', gap: 12, marginBottom: 18, alignItems: 'flex-start' },
-  stepIndicator: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E6F0F2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, gap: 4, marginTop: 2 },
-  stepIndicatorText: { fontSize: 12, fontWeight: '700', color: '#003B46' },
-  stepBodyText: { fontSize: 13.5, color: Colors.textSecondary, flex: 1, lineHeight: 19 },
-  boldText: { fontWeight: '700', color: Colors.textPrimary },
-  guideActionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#003B46', borderRadius: 14, paddingVertical: 15, marginTop: 15 },
-  guideActionBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+  upfSyncBtnText: { 
+    color: '#fff', 
+    fontWeight: '700', 
+    fontSize: 14 
+  },
+  guideOverlay: { 
+    flex: 1, 
+    backgroundColor: Colors.overlay, 
+    justifyContent: 'flex-end' 
+  },
+  guideSheet: { 
+    backgroundColor: Colors.card, 
+    borderTopLeftRadius: 24, 
+    borderTopRightRadius: 24, 
+    padding: 24, 
+    maxHeight: '85%' 
+  },
+  guideHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    marginBottom: 20 
+  },
+  guideTitle: { 
+    fontSize: 16, 
+    fontWeight: '700', 
+    color: '#003B46', 
+    flex: 1, 
+    marginRight: 10, 
+    lineHeight: 22 
+  },
+  guideCloseBtn: { 
+    padding: 4, 
+    backgroundColor: Colors.background, 
+    borderRadius: 16 
+  },
+  stepBlock: { 
+    flexDirection: 'row', 
+    gap: 12, 
+    marginBottom: 18, 
+    alignItems: 'flex-start' 
+  },
+  stepIndicator: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#E6F0F2', 
+    paddingHorizontal: 8, 
+    paddingVertical: 4, 
+    borderRadius: 8, 
+    gap: 4, 
+    marginTop: 2 
+  },
+  stepIndicatorText: { 
+    fontSize: 12, 
+    fontWeight: '700', 
+    color: '#003B46' 
+  },
+  stepBodyText: { 
+    fontSize: 13.5, 
+    color: Colors.textSecondary, 
+    flex: 1, 
+    lineHeight: 19 
+  },
+  boldText: { 
+    fontWeight: '700', 
+    color: Colors.textPrimary 
+  },
+  guideActionBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 8, 
+    backgroundColor: '#003B46', 
+    borderRadius: 14, 
+    paddingVertical: 15, 
+    marginTop: 15 
+  },
+  guideActionBtnText: { 
+    fontSize: 15, 
+    fontWeight: '700', 
+    color: '#fff' 
+  },
 
-  toggleRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, marginBottom: 4, backgroundColor: Colors.card, borderRadius: 14, padding: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
-  toggleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 11 },
-  toggleBtnActive:     { backgroundColor: Colors.primaryRed },
-  toggleBtnText:       { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  toggleBtnTextActive: { color: '#fff' },
-  calendarCard: { backgroundColor: Colors.card, margin: 20, borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 },
-  weekNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  navBtn:    { padding: 6 },
-  monthLabel: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
-  weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  dayCell: { alignItems: 'center', flex: 1, paddingVertical: 8, borderRadius: 12, gap: 4 },
-  dayCellSelected: { backgroundColor: Colors.primaryRed },
-  dayLabel:         { fontSize: 11, fontWeight: '600', color: Colors.textTertiary, textTransform: 'uppercase' },
-  dayLabelSelected: { color: 'rgba(255,255,255,0.75)' },
-  dayNum:           { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
-  dayNumSelected:   { color: '#fff' },
-  dayNumToday:      { color: Colors.primaryRed },
-  dayHeaderCell: { flex: 1, alignItems: 'center', paddingBottom: 8 },
-  dayHeaderText: { fontSize: 11, fontWeight: '600', color: Colors.textTertiary, textTransform: 'uppercase' },
-  monthGrid:     { flexDirection: 'row', flexWrap: 'wrap' },
-  monthCell: { width: `${100 / 7}%`, aspectRatio: 0.9, alignItems: 'center', justifyContent: 'center', borderRadius: 10, gap: 3, marginVertical: 2 },
-  monthCellSelected:      { backgroundColor: Colors.primaryRed },
-  monthCellNum:           { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
-  monthCellNumSelected:   { color: '#fff' },
-  monthCellNumToday:      { color: Colors.primaryRed },
-  dotRow:                 { flexDirection: 'row', gap: 2 },
-  eventDot:         { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.primaryRed },
-  eventDotSelected: { backgroundColor: 'rgba(255,255,255,0.8)' },
-  section:      { paddingHorizontal: 20, marginBottom: 20 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary, marginBottom: 12 },
-  eventItem: { flexDirection: 'row', backgroundColor: Colors.card, borderRadius: 14, overflow: 'hidden', marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 1 },
-  eventStripe:  { width: 4 },
-  eventContent: { flex: 1, padding: 12 },
-  eventTopRow:  { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  typePill:     { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  typePillText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
-  subject:      { fontSize: 11, color: Colors.textTertiary, flex: 1 },
-  eventTitle:   { fontSize: 14, fontWeight: '600', color: Colors.textPrimary, marginBottom: 6 },
-  eventMeta:    { gap: 3 },
-  metaItem:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  metaText:     { fontSize: 12, color: Colors.textSecondary },
-  emptyDay:  { backgroundColor: Colors.card, borderRadius: 14, padding: 20, alignItems: 'center' },
-  emptyText: { color: Colors.textTertiary, fontSize: 14 },
-  legendCard:  { backgroundColor: Colors.card, marginHorizontal: 20, borderRadius: 14, padding: 16 },
-  legendTitle: { fontSize: 12, fontWeight: '700', color: Colors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
-  legendRow:  { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendDot:  { width: 10, height: 10, borderRadius: 5 },
-  legendText: { fontSize: 13, color: Colors.textSecondary },
-  fab: { position: 'absolute', bottom: 28, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.primaryRed, alignItems: 'center', justifyContent: 'center' },
-  modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: Colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '90%' },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  modalTitle:    { fontSize: 18, fontWeight: '700', color: Colors.textPrimary },
-  modalCloseBtn: { padding: 4 },
-  fieldLabel: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6, marginTop: 14 },
-  input: { backgroundColor: Colors.background, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: Colors.textPrimary, borderWidth: 1, borderColor: Colors.cardBorder },
-  inputError: { borderColor: Colors.primaryRed, borderWidth: 1.5 },
-  errorTextAlert: { color: Colors.primaryRed, fontSize: 13, fontWeight: '600', marginTop: 8, textAlign: 'center' },
-  typeRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  typeChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5 },
-  typeChipText: { fontSize: 13, fontWeight: '600' },
-  row: { flexDirection: 'row' },
-  addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.primaryRed, borderRadius: 14, paddingVertical: 15, marginTop: 24 },
-  addBtnDisabled: { opacity: 0.5 },
-  addBtnText:     { fontSize: 15, fontWeight: '700', color: '#fff' },
+  toggleRow: { 
+    flexDirection: 'row', 
+    marginHorizontal: 20, 
+    marginTop: 16, 
+    marginBottom: 4, 
+    backgroundColor: Colors.card, 
+    borderRadius: 14, 
+    padding: 4, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.06, 
+    shadowRadius: 6, 
+    elevation: 2 
+  },
+  toggleBtn: { 
+    flex: 1, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 6, 
+    paddingVertical: 9, 
+    borderRadius: 11 
+  },
+  toggleBtnActive: { 
+    backgroundColor: Colors.primaryRed 
+  },
+  toggleBtnText: { 
+    fontSize: 13, 
+    fontWeight: '600', 
+    color: Colors.textSecondary 
+  },
+  toggleBtnTextActive: { 
+    color: '#fff' 
+  },
+  calendarCard: { 
+    backgroundColor: Colors.card, 
+    margin: 20, 
+    borderRadius: 18, 
+    padding: 16, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.07, 
+    shadowRadius: 8, 
+    elevation: 3 
+  },
+  weekNav: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    marginBottom: 16 
+  },
+  navBtn: { 
+    padding: 6 
+  },
+  monthLabel: { 
+    fontSize: 15, 
+    fontWeight: '700', 
+    color: Colors.textPrimary 
+  },
+  weekRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between' 
+  },
+  dayCell: { 
+    alignItems: 'center', 
+    flex: 1, 
+    paddingVertical: 8, 
+    borderRadius: 12, 
+    gap: 4 
+  },
+  dayCellSelected: { 
+    backgroundColor: Colors.primaryRed 
+  },
+  dayLabel: { 
+    fontSize: 11, 
+    fontWeight: '600', 
+    color: Colors.textTertiary, 
+    textTransform: 'uppercase' 
+  },
+  dayLabelSelected: { 
+    color: 'rgba(255,255,255,0.75)' 
+  },
+  dayNum: { 
+    fontSize: 16, 
+    fontWeight: '700', 
+    color: Colors.textPrimary 
+  },
+  dayNumSelected: { 
+    color: '#fff' 
+  },
+  dayNumToday: { 
+    color: Colors.primaryRed 
+  },
+  dayHeaderCell: { 
+    flex: 1, 
+    alignItems: 'center', 
+    paddingBottom: 8 
+  },
+  dayHeaderText: { 
+    fontSize: 11, 
+    fontWeight: '600', 
+    color: Colors.textTertiary, 
+    textTransform: 'uppercase' 
+  },
+  monthGrid: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap' 
+  },
+  monthCell: { 
+    width: `${100 / 7}%`, 
+    aspectRatio: 0.9, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderRadius: 10, 
+    gap: 3, 
+    marginVertical: 2 
+  },
+  monthCellSelected: { 
+    backgroundColor: Colors.primaryRed 
+  },
+  monthCellNum: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: Colors.textPrimary 
+  },
+  monthCellNumSelected: { 
+    color: '#fff' 
+  },
+  monthCellNumToday: { 
+    color: Colors.primaryRed 
+  },
+  dotRow: { 
+    flexDirection: 'row', 
+    gap: 2 
+  },
+  eventDot: { 
+    width: 4, 
+    height: 4, 
+    borderRadius: 2, 
+    backgroundColor: Colors.primaryRed 
+  },
+  eventDotSelected: { 
+    backgroundColor: 'rgba(255,255,255,0.8)' 
+  },
+  section: { 
+    paddingHorizontal: 20, 
+    marginBottom: 20 
+  },
+  sectionTitle: { 
+    fontSize: 15, 
+    fontWeight: '700', 
+    color: Colors.textPrimary, 
+    marginBottom: 12 
+  },
+  eventItem: { 
+    flexDirection: 'row', 
+    backgroundColor: Colors.card, 
+    borderRadius: 14, 
+    overflow: 'hidden', 
+    marginBottom: 10, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.05, 
+    shadowRadius: 6, 
+    elevation: 1 
+  },
+  eventStripe: { 
+    width: 4 
+  },
+  eventContent: { 
+    flex: 1, 
+    padding: 12 
+  },
+  eventTopRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8, 
+    marginBottom: 4 
+  },
+  typePill: { 
+    paddingHorizontal: 8, 
+    paddingVertical: 2, 
+    borderRadius: 10 
+  },
+  typePillText: { 
+    fontSize: 10, 
+    fontWeight: '700', 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.4 
+  },
+  subject: { 
+    fontSize: 11, 
+    color: Colors.textTertiary, 
+    flex: 1 
+  },
+  eventTitle: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: Colors.textPrimary, 
+    marginBottom: 6 
+  },
+  eventMeta: { 
+    gap: 3 
+  },
+  metaItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 5 
+  },
+  metaText: { 
+    fontSize: 12, 
+    color: Colors.textSecondary 
+  },
+  emptyDay: { 
+    backgroundColor: Colors.card, 
+    borderRadius: 14, 
+    padding: 20, 
+    alignItems: 'center' 
+  },
+  emptyText: { 
+    color: Colors.textTertiary, 
+    fontSize: 14 
+  },
+  legendCard: { 
+    backgroundColor: Colors.card, 
+    marginHorizontal: 20, 
+    borderRadius: 14, 
+    padding: 16 
+  },
+  legendTitle: { 
+    fontSize: 12, 
+    fontWeight: '700', 
+    color: Colors.textTertiary, 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.5, 
+    marginBottom: 12 
+  },
+  legendRow: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    gap: 12 
+  },
+  legendItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 6 
+  },
+  legendDot: { 
+    width: 10, height: 10, borderRadius: 5 
+  },
+  legendText: { 
+    fontSize: 13, 
+    color: Colors.textSecondary 
+  },
+  fab: { 
+    position: 'absolute', 
+    bottom: 28, 
+    right: 24, 
+    width: 56, 
+    height: 56, 
+    borderRadius: 28, 
+    backgroundColor: Colors.primaryRed, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  modalOverlay: { 
+    flex: 1, 
+    backgroundColor: Colors.overlay, 
+    justifyContent: 'flex-end' 
+  },
+  modalSheet: { 
+    backgroundColor: Colors.card, 
+    borderTopLeftRadius: 24, 
+    borderTopRightRadius: 24, 
+    padding: 20, 
+    maxHeight: '90%' 
+  },
+  modalHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    marginBottom: 20 
+  },
+  modalTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: Colors.textPrimary 
+  },
+  modalCloseBtn: { 
+    padding: 4 
+  },
+  fieldLabel: { 
+    fontSize: 12, 
+    fontWeight: '600', 
+    color: Colors.textSecondary, 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.4, 
+    marginBottom: 6, 
+    marginTop: 14 
+  },
+  input: { 
+    backgroundColor: Colors.background, 
+    borderRadius: 12, 
+    paddingHorizontal: 14, 
+    paddingVertical: 12, 
+    fontSize: 15, 
+    color: Colors.textPrimary, 
+    borderWidth: 1, 
+    borderColor: Colors.cardBorder 
+  },
+  inputError: { 
+    borderColor: Colors.primaryRed, 
+    borderWidth: 1.5 
+  },
+  errorTextAlert: { 
+    color: Colors.primaryRed, 
+    fontSize: 13, 
+    fontWeight: '600', 
+    marginTop: 8, 
+    textAlign: 'center' 
+  },
+  typeRow: { 
+    flexDirection: 'row', 
+    gap: 8, 
+    flexWrap: 'wrap' 
+  },
+  typeChip: { 
+    paddingHorizontal: 14, 
+    paddingVertical: 7, 
+    borderRadius: 20, 
+    borderWidth: 1.5 
+  },
+  typeChipText: { 
+    fontSize: 13, 
+    fontWeight: '600' 
+  },
+  row: { 
+    flexDirection: 'row' 
+  },
+  addBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 8, 
+    backgroundColor: Colors.primaryRed, 
+    borderRadius: 14, 
+    paddingVertical: 15, 
+    marginTop: 24 
+  },
+  addBtnDisabled: { 
+    opacity: 0.5 
+  },
+  addBtnText: { 
+    fontSize: 15, 
+    fontWeight: '700', 
+    color: '#fff' 
+  },
 });
