@@ -69,7 +69,7 @@ export interface CalendarEvent {
   time: string;
   endTime?: string;
   location?: string;
-  type: 'class' | 'exam' | 'deadline' | 'event';
+  type: 'class' | 'exam' | 'deadline' | 'event' | 'google' | 'upf';
   subject?: string;
 }
 

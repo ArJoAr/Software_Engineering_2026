@@ -15,6 +15,8 @@ import {
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import { createClient } from '@supabase/supabase-js';
 import {
   ArrowLeft,
@@ -26,6 +28,10 @@ import {
   X,
   Calendar,
   LayoutGrid,
+  Chrome,
+  KeyRound,
+  CalendarDays,
+  FileDown,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { MOCK_CALENDAR } from '@/constants/mockData';
@@ -48,10 +54,11 @@ const TYPE_STYLES: Record<string, { color: string; bg: string; label: string }> 
   deadline: { color: Colors.warning,                 bg: Colors.warningLight,   label: 'Deadline' },
   event:    { color: Colors.categoryColors.events,   bg: Colors.categoryBg.events, label: 'Event' },
   google:   { color: '#4285F4',                      bg: '#E8F0FE',             label: 'Google Sync' },
+  upf:      { color: '#003B46',                      bg: '#E6F0F2',             label: 'UPF Sync' },
 };
 
 const DAYS_SHORT  = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const MONTHS      = [
+const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
@@ -59,8 +66,10 @@ const MONTHS      = [
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function toDateStr(d: Date) {
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function getWeekDays(base: Date): Date[] {
@@ -80,13 +89,77 @@ function getDaysInMonth(year: number, month: number): Date[] {
   const startDow = first.getDay();
   const padStart = startDow === 0 ? 6 : startDow - 1;
   const cells: (Date | null)[] = Array(padStart).fill(null);
-  for (let d = 1; d <= last.getDate(); d++) cells.push(new Date(year, month, d));
+  for (let d = 1; d <= last.getDate(); d++) {
+    cells.push(new Date(year, month, d));
+  }
   while (cells.length % 7 !== 0) cells.push(null);
   return cells as Date[];
 }
 
 function genId() {
   return 'u' + Math.random().toString(36).slice(2, 9);
+}
+
+// ─── UPF iCalendar Parser Helper ─────────────────────────────────────────────
+function parseICSString(text: string): CalendarEvent[] {
+  const events: CalendarEvent[] = [];
+  const cleanText = text.replace(/\r/g, '');
+  const vevents = cleanText.split('BEGIN:VEVENT');
+  
+  for (let i = 1; i < vevents.length; i++) {
+    const block = vevents[i];
+    
+    const summaryMatch  = block.match(/SUMMARY:(.*)/);
+    const dtstartMatch  = block.match(/DTSTART[;:].*?([0-9]{8}T[0-9]{6})/);
+    const dtendMatch    = block.match(/DTEND[;:].*?([0-9]{8}T[0-9]{6})/);
+    const locationMatch = block.match(/LOCATION:(.*)/);
+
+    if (summaryMatch && dtstartMatch) {
+      const rawStart = dtstartMatch[1];
+      
+      const year = rawStart.substring(0, 4);
+      const month = rawStart.substring(4, 6);
+      const day = rawStart.substring(6, 8);
+      const eventDate = `${year}-${month}-${day}`;
+
+      let eventTime = '00:00';
+      if (rawStart.includes('T')) {
+        const hour = rawStart.substring(9, 11);
+        const min = rawStart.substring(11, 13);
+        eventTime = `${hour}:${min}`;
+      }
+
+      let eventEndTime: string | undefined = undefined;
+      if (dtendMatch) {
+        const rawEnd = dtendMatch[1];
+        if (rawEnd.includes('T')) {
+          const endHour = rawEnd.substring(9, 11);
+          const endMin = rawEnd.substring(11, 13);
+          eventEndTime = `${endHour}:${endMin}`;
+        }
+      }
+
+      let title = summaryMatch[1].replace(/\\,/g, ',').trim();
+      if (title.includes('|')) {
+        title = title.split('|')[0].trim();
+      }
+
+      const isExam = summaryMatch[1].toLowerCase().includes('exam');
+      const eventType = isExam ? 'exam' : 'class';
+
+      events.push({
+        id: 'upf-' + Math.random().toString(36).slice(2, 9),
+        title: title,
+        date: eventDate,
+        time: eventTime,
+        endTime: eventEndTime,
+        location: locationMatch ? locationMatch[1].replace(/\\,/g, ',').trim() : undefined,
+        type: eventType,
+        subject: 'UPF'
+      });
+    }
+  }
+  return events;
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -144,8 +217,6 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
   const [location, setLocation] = useState('');
   const [subject, setSubject]   = useState('');
   const [type, setType]         = useState<EventType>('class');
-  
-  // Estado para pintar el error en el formulario de forma visual
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const reset = () => {
@@ -154,7 +225,6 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
     setErrorMsg(null);
   };
 
-  // Validador de formato de hora realista (00:00 a 23:59)
   const isValidTimeFormat = (timeStr: string) => {
     const regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     return regex.test(timeStr.trim());
@@ -164,7 +234,6 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
     if (!title.trim() || !date.trim() || !time.trim()) return;
     setErrorMsg(null);
 
-    // 1. Validar formato de hora de inicio
     if (!isValidTimeFormat(time)) {
       const msg = "Start time is unrealistic (use HH:MM format from 00:00 to 23:59)";
       setErrorMsg(msg);
@@ -172,7 +241,6 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
       return;
     }
 
-    // 2. Validar hora de fin si se ha introducido una
     if (endTime.trim().length > 0) {
       if (!isValidTimeFormat(endTime)) {
         const msg = "End time is unrealistic (use HH:MM format from 00:00 to 23:59)";
@@ -181,7 +249,6 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
         return;
       }
 
-      // 3. Comprobar que la hora de fin NO sea anterior o igual a la de inicio
       const [startHours, startMinutes] = time.split(':').map(Number);
       const [endHours, endMinutes] = endTime.split(':').map(Number);
 
@@ -229,7 +296,7 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Text style={styles.fieldLabel}>Type</Text>
             <View style={styles.typeRow}>
-              {(Object.entries(TYPE_STYLES).filter(([k]) => k !== 'google') as [EventType, typeof TYPE_STYLES[string]][]).map(([key, val]) => (
+              {(Object.entries(TYPE_STYLES).filter(([k]) => k !== 'google' && k !== 'upf') as [EventType, typeof TYPE_STYLES[string]][]).map(([key, val]) => (
                 <TouchableOpacity
                   key={key}
                   style={[
@@ -270,7 +337,6 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
               </View>
             </View>
 
-            {/* Aviso dinámico de texto de error en rojo */}
             {errorMsg && (
               <Text style={styles.errorTextAlert}>{errorMsg}</Text>
             )}
@@ -306,8 +372,13 @@ export default function CalendarScreen() {
   const [monthBase, setMonthBase]     = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [events, setEvents]           = useState<CalendarEvent[]>(MOCK_CALENDAR);
   const [showModal, setShowModal]     = useState(false);
+  
   const [syncing, setSyncing]         = useState(false);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
+  
+  const [syncingUPF, setSyncingUPF]   = useState(false);
+  const [isUPFConnected, setIsUPFConnected] = useState(false);
+  const [showUPFGuide, setShowUPFGuide]     = useState(false); 
 
   useEffect(() => {
     checkExistingGoogleSession();
@@ -380,18 +451,66 @@ export default function CalendarScreen() {
               time: eventTime,
               endTime: eventEndTime,
               location: gEvent.location || undefined,
-              type: 'google',
+              type: 'class',
               subject: 'Google Account'
             };
           });
 
         setEvents((prev) => {
-          const localEvents = prev.filter((e) => (e.type as string) !== 'google');
+          const localEvents = prev.filter((e) => e.subject !== 'Google Account');
           return [...localEvents, ...mappedGoogleEvents];
         });
       }
     } catch (err) {
       console.error("Error fetching Google items:", err);
+    }
+  };
+
+  const handlePickICSFile = async () => {
+    setShowUPFGuide(false);
+    setSyncingUPF(true);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['text/calendar', 'application/ics'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        setSyncingUPF(false);
+        return;
+      }
+
+      const pickedFile = result.assets[0];
+      let fileContent = '';
+
+      if (Platform.OS === 'web') {
+        const response = await fetch(pickedFile.uri);
+        fileContent = await response.text();
+      } else {
+        fileContent = await FileSystem.readAsStringAsync(pickedFile.uri);
+      }
+
+      const upfEvents = parseICSString(fileContent);
+
+      if (upfEvents.length === 0) {
+        Alert.alert("Aviso", "No se encontraron clases válidas. Asegúrate de que el archivo exportado sea el de la Secretaría Virtual de la UPF.");
+        setSyncingUPF(false);
+        return;
+      }
+
+      setEvents((prev) => {
+        const filtered = prev.filter((e) => e.subject !== 'UPF');
+        return [...filtered, ...upfEvents];
+      });
+
+      setIsUPFConnected(true);
+      Alert.alert("¡Éxito!", `Se han sincronizado ${upfEvents.length} eventos de tu horario de la UPF.`);
+
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error de importación", "Hubo un problema al leer tu archivo .ics.");
+    } finally {
+      setSyncingUPF(false);
     }
   };
 
@@ -550,7 +669,7 @@ export default function CalendarScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Botón de Sincronización Google */}
+        {/* Botón Google */}
         <TouchableOpacity 
           style={[styles.googleSyncBtn, isGoogleConnected && styles.googleSyncBtnConnected]} 
           onPress={handleConnectGoogle}
@@ -565,7 +684,22 @@ export default function CalendarScreen() {
           )}
         </TouchableOpacity>
 
-        {/* View toggle */}
+        {/* Botón UPF */}
+        <TouchableOpacity 
+          style={[styles.upfSyncBtn, isUPFConnected && styles.upfSyncBtnConnected]} 
+          onPress={() => setShowUPFGuide(true)}
+          disabled={syncingUPF}
+        >
+          {syncingUPF ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.upfSyncBtnText}>
+              {isUPFConnected ? '✓ UPF Calendar Connected' : 'Sync UPF Secretaría Virtual'}
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Toggles */}
         <View style={styles.toggleRow}>
           <TouchableOpacity style={[styles.toggleBtn, viewMode === 'daily' && styles.toggleBtnActive]} onPress={() => setViewMode('daily')}>
             <Calendar size={15} color={viewMode === 'daily' ? '#fff' : Colors.textSecondary} />
@@ -609,6 +743,78 @@ export default function CalendarScreen() {
 
         <View style={{ height: 24 }} />
       </ScrollView>
+
+      {/* ── MODAL INTERACTIVO: GUÍA DE LA EXTENSIÓN UPF ── */}
+      <Modal
+        visible={showUPFGuide}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowUPFGuide(false)}
+      >
+        <View style={styles.guideOverlay}>
+          <View style={styles.guideSheet}>
+            <View style={styles.guideHeader}>
+              <Text style={styles.guideTitle}>Paso 1: Descargar la extensión y generar el archivo</Text>
+              <TouchableOpacity onPress={() => setShowUPFGuide(false)} style={styles.guideCloseBtn}>
+                <X size={20} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+              
+              {/* Paso 1 */}
+              <View style={styles.stepBlock}>
+                <View style={styles.stepIndicator}>
+                  <Chrome size={16} color="#003B46" />
+                  <Text style={styles.stepIndicatorText}>1</Text>
+                </View>
+                <Text style={styles.stepBodyText}>
+                  Entra a la <Text style={styles.boldText}>Chrome Web Store</Text> y busca <Text style={styles.boldText}>"Exportador de horario y calendario UPF"</Text> (o haz clic en su enlace si lo buscas directamente en la tienda). Instálala en tu navegador.
+                </Text>
+              </View>
+
+              {/* Paso 2 */}
+              <View style={styles.stepBlock}>
+                <View style={styles.stepIndicator}>
+                  <KeyRound size={16} color="#003B46" />
+                  <Text style={styles.stepIndicatorText}>2</Text>
+                </View>
+                <Text style={styles.stepBodyText}>
+                  Inicia sesión en el <Text style={styles.boldText}>Campus Global de la UPF</Text> y dirígete a la <Text style={styles.boldText}>Secretaría Virtual</Text>.
+                </Text>
+              </View>
+
+              {/* Paso 3 */}
+              <View style={styles.stepBlock}>
+                <View style={styles.stepIndicator}>
+                  <CalendarDays size={16} color="#003B46" />
+                  <Text style={styles.stepIndicatorText}>3</Text>
+                </View>
+                <Text style={styles.stepBodyText}>
+                  Abre tu sección de <Text style={styles.boldText}>Calendario de clases / Horario</Text>.
+                </Text>
+              </View>
+
+              {/* Paso 4 */}
+              <View style={styles.stepBlock}>
+                <View style={styles.stepIndicator}>
+                  <FileDown size={16} color="#003B46" />
+                  <Text style={styles.stepIndicatorText}>4</Text>
+                </View>
+                <Text style={styles.stepBodyText}>
+                  Haz clic en el icono de la extensión que acabas de instalar (en la barra de herramientas de tu navegador). Selecciona el rango de fechas que quieres llevarte, presiona <Text style={styles.boldText}>Detectar materias</Text> y marca las asignaturas o seminarios que te interesen. Haz clic en <Text style={styles.boldText}>Exportar .ics</Text>. Se descargará un archivo con tus clases en tu ordenador.
+                </Text>
+              </View>
+
+              {/* Botón para subir el archivo */}
+              <TouchableOpacity style={styles.guideActionBtn} onPress={handlePickICSFile}>
+                <FileDown size={18} color="#fff" />
+                <Text style={styles.guideActionBtnText}>Subir archivo .ics descargado</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       <TouchableOpacity style={styles.fab} onPress={() => setShowModal(true)}>
         <Plus size={24} color="#fff" />
@@ -655,6 +861,34 @@ const styles = StyleSheet.create({
     shadowColor: '#2E7D32',
   },
   googleSyncBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  upfSyncBtn: {
+    backgroundColor: '#003B46',
+    marginHorizontal: 20,
+    marginTop: 10,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  upfSyncBtnConnected: {
+    backgroundColor: '#2E7D32',
+  },
+  upfSyncBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  
+  // ESTILOS DE LA GUÍA OFICIAL
+  guideOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
+  guideSheet: { backgroundColor: Colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '85%' },
+  guideHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
+  guideTitle: { fontSize: 16, fontWeight: '700', color: '#003B46', flex: 1, marginRight: 10, lineHeight: 22 },
+  guideCloseBtn: { padding: 4, backgroundColor: Colors.background, borderRadius: 16 },
+  stepBlock: { flexDirection: 'row', gap: 12, marginBottom: 18, alignItems: 'flex-start' },
+  stepIndicator: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#E6F0F2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, gap: 4, marginTop: 2 },
+  stepIndicatorText: { fontSize: 12, fontWeight: '700', color: '#003B46' },
+  stepBodyText: { fontSize: 13.5, color: Colors.textSecondary, flex: 1, lineHeight: 19 },
+  boldText: { fontWeight: '700', color: Colors.textPrimary },
+  guideActionBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#003B46', borderRadius: 14, paddingVertical: 15, marginTop: 15, shadowColor: '#003B46', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 6, elevation: 4 },
+  guideActionBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+
   toggleRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, marginBottom: 4, backgroundColor: Colors.card, borderRadius: 14, padding: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
   toggleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 11 },
   toggleBtnActive:     { backgroundColor: Colors.primaryRed },
