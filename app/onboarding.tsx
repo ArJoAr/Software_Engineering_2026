@@ -102,7 +102,7 @@ export default function OnboardingScreen() {
               <Text style={[styles.dropdownButtonText, !degree && styles.placeholderText]}>
                 {degree || 'Select your degree...'}
               </Text>
-              <ChevronDown size={20} color={faculty ? Colors.textTertiary : Colors.border} />
+              <ChevronDown size={20} color={faculty ? Colors.textTertiary : Colors.cardBorder} />
             </TouchableOpacity>
           </View>
         )}
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Colors.cardBorder,
     backgroundColor: '#fff',
     borderRadius: 12,
     paddingHorizontal: 16,
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     padding: 24,
     backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: Colors.cardBorder,
   },
   submitBtn: {
     backgroundColor: Colors.primaryRed,
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Colors.cardBorder,
   },
   modalTitle: {
     fontSize: 18,
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Colors.cardBorder,
   },
   modalOptionText: {
     fontSize: 16,
