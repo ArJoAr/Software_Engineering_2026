@@ -4,7 +4,7 @@ import { View, ActivityIndicator } from 'react-native';
 import { Colors } from '@/constants/colors';
 
 export default function Index() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, student } = useAuth();
 
   if (isLoading) {
     return (
@@ -14,5 +14,9 @@ export default function Index() {
     );
   }
 
-  return <Redirect href={isAuthenticated ? '/(tabs)' : '/login'} />;
+  if (!isAuthenticated) return <Redirect href="/login" />;
+
+  const needsOnboarding = !student?.faculty || (!student?.degree && student?.role === 'STUDENT');
+
+  return <Redirect href={needsOnboarding ? '/onboarding' : '/(tabs)'} />;
 }

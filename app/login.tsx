@@ -81,7 +81,11 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (result.success) {
-      router.replace('/(tabs)');
+      if (result.needsOnboarding) {
+        router.replace('/onboarding' as any);
+      } else {
+        router.replace('/(tabs)');
+      }
     } else {
       setError(result.error || 'Authentication failed.');
     }

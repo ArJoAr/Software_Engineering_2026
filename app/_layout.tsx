@@ -4,8 +4,28 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
+import { useEffect } from 'react';
+import { useRouter, useSegments } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
+
 function AppStack() {
   const { isDark } = useTheme();
+  const { isAuthenticated, isLoading, student } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (isAuthenticated && student) {
+      const needsOnboarding = !student.faculty || (!student.degree && student.role === 'STUDENT');
+      
+      if (needsOnboarding && segments[0] !== 'onboarding') {
+        router.replace('/onboarding' as any);
+      }
+    }
+  }, [isAuthenticated, student, segments, isLoading]);
+
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
@@ -18,6 +38,7 @@ function AppStack() {
         <Stack.Screen name="events" options={{ presentation: 'card' }} />
         <Stack.Screen name="event/[id]" options={{ presentation: 'card' }} />
         <Stack.Screen name="chatbot" options={{ presentation: 'card' }} />
+        <Stack.Screen name="onboarding" options={{ presentation: 'card', gestureEnabled: false }} />
         <Stack.Screen name="menu" options={{ presentation: 'modal' }} />
         <Stack.Screen name="+not-found" />
       </Stack>

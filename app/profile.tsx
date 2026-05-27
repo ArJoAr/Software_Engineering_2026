@@ -23,7 +23,10 @@ import {
   Moon,
   Edit2,
   Check,
+  Camera,
 } from 'lucide-react-native';
+
+import * as ImagePicker from 'expo-image-picker';
 
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/context/AuthContext';
@@ -59,11 +62,23 @@ export default function ProfileScreen() {
     router.replace('/login');
   };
 
-  // Mantenemos tus tipos seguros de la rama FEATURE
+  const handlePickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      updateProfile({ photoUrl: result.assets[0].uri });
+    }
+  };
+
   const infoRows = [
     { icon: User, label: 'Student ID', value: student?.studentIdNumber },
     { icon: Mail, label: 'Institutional Email', value: student?.email },
-    { icon: GraduationCap, label: 'Degree', value: student?.degree },
+    ...(student?.role !== 'TEACHER' ? [{ icon: GraduationCap, label: 'Degree', value: student?.degree }] : []),
     { icon: Building, label: 'Faculty', value: student?.faculty },
   ];
 
@@ -74,11 +89,15 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Student Profile</Text>
-        <TouchableOpacity style={styles.backBtn} onPress={() => {
+        <Text style={styles.headerTitle}>{student?.role === 'TEACHER' ? 'Teacher Profile' : 'Student Profile'}</Text>
+        <TouchableOpacity style={styles.backBtn} onPress={async () => {
           if (isEditing) {
-            updateProfile(editData);
-            setIsEditing(false);
+            const res = await updateProfile(editData);
+            if (res && !res.success) {
+              alert(res.error);
+            } else {
+              setIsEditing(false);
+            }
           } else {
             setIsEditing(true);
           }
@@ -89,24 +108,35 @@ export default function ProfileScreen() {
 
       {/* ─── HERO PROFILE (Estilo Main + Datos Seguros Feature) ─── */}
       <View style={styles.profileHero}>
-        <View style={styles.avatarWrapper}>
-          <Image
-            source={{
-              uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
-            }}
-            style={styles.avatar}
-          />
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>STUDENT</Text>
+        <TouchableOpacity style={styles.avatarWrapper} onPress={handlePickImage} activeOpacity={0.85}>
+          {student?.photoUrl ? (
+            <Image
+              source={{ uri: student.photoUrl }}
+              style={styles.avatar}
+            />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }]}>
+              <Text style={{ fontSize: 36, color: '#fff', fontWeight: 'bold' }}>
+                {student?.firstName?.[0]?.toUpperCase() || 'U'}
+              </Text>
+            </View>
+          )}
+          <View style={{ position: 'absolute', bottom: -5, left: 10, backgroundColor: colors.primaryRed, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.background, zIndex: 10 }}>
+            <Camera size={14} color="#fff" />
           </View>
-        </View>
-        {/* Usamos split('@') para sacar el nombre del correo, evitando el error de fullName */}
-        <Text style={styles.fullName}>{student?.email?.split('@')[0] || 'Student'}</Text>
+          <View style={styles.roleBadge}>
+            <Text style={styles.roleBadgeText}>{student?.role || 'STUDENT'}</Text>
+          </View>
+        </TouchableOpacity>
+        <Text style={styles.fullName}>{student?.fullName || 'User'}</Text>
         <Text style={styles.username}>ID: {student?.studentIdNumber || 'N/A'}</Text>
-        <View style={styles.yearPill}>
-          <GraduationCap size={13} color={colors.primaryRed} />
-          <Text style={styles.yearPillText}>{student?.degree || 'Academic Program'}</Text>
-        </View>
+        
+        {student?.role !== 'TEACHER' && (
+          <View style={styles.yearPill}>
+            <GraduationCap size={13} color={colors.primaryRed} />
+            <Text style={styles.yearPillText}>{student?.degree || 'Academic Program'}</Text>
+          </View>
+        )}
       </View>
 
       {/* ─── INFORMACIÓN ACADÉMICA ─── */}
@@ -121,13 +151,15 @@ export default function ProfileScreen() {
                 <TextInput style={styles.editInput} value={editData.email} onChangeText={t => setEditData({...editData, email: t})} />
               </View>
             </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoIcon}><GraduationCap size={16} color={colors.primaryRed} /></View>
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Degree</Text>
-                <TextInput style={styles.editInput} value={editData.degree} onChangeText={t => setEditData({...editData, degree: t})} />
+            {student?.role !== 'TEACHER' && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoIcon}><GraduationCap size={16} color={colors.primaryRed} /></View>
+                <View style={styles.infoContent}>
+                  <Text style={styles.infoLabel}>Degree</Text>
+                  <TextInput style={styles.editInput} value={editData.degree} onChangeText={t => setEditData({...editData, degree: t})} />
+                </View>
               </View>
-            </View>
+            )}
             <View style={styles.infoRow}>
               <View style={styles.infoIcon}><Building size={16} color={colors.primaryRed} /></View>
               <View style={styles.infoContent}>
