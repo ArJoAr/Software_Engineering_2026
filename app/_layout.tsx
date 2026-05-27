@@ -1,12 +1,9 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
-
 import { useEffect } from 'react';
-import { useRouter, useSegments } from 'expo-router';
-import { useAuth } from '@/context/AuthContext';
 
 function AppStack() {
   const { isDark } = useTheme();
@@ -24,7 +21,7 @@ function AppStack() {
         router.replace('/onboarding' as any);
       }
     }
-  }, [isAuthenticated, student, segments, isLoading]);
+  }, [isAuthenticated, student, segments, isLoading, router]);
 
   return (
     <>

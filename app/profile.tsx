@@ -28,7 +28,7 @@ import {
 
 import * as ImagePicker from 'expo-image-picker';
 
-import { Colors } from '@/constants/colors';
+
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 

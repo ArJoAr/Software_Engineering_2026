@@ -69,7 +69,7 @@ export default function PrinterScreen() {
     try {
       await Linking.openURL(mailto);
       setStatus('Se ha abierto tu cliente de correo. Revisa tu bandeja para enviar el email.');
-    } catch (e) {
+    } catch {
       setError('No se pudo abrir el cliente de correo. Por favor inténtalo de nuevo.');
     } finally {
       setSending(false);

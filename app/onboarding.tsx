@@ -61,7 +61,7 @@ export default function OnboardingScreen() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Welcome to UPF Campus!</Text>
         <Text style={styles.headerSubtitle}>
-          Let's complete your profile so we can personalize your experience.
+          Let&apos;s complete your profile so we can personalize your experience.
         </Text>
       </View>
 
