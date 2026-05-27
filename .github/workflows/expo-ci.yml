@@ -23,7 +23,7 @@ jobs:
           cache: 'npm' # Automatiza la caché de dependencias para ir más rápido
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run Linter (expo lint)
         run: npm run lint
@@ -48,7 +48,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
       - name: Run Unit Tests
         run: npm run test
 
