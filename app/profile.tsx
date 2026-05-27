@@ -1,45 +1,16 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Switch,
-} from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  ArrowLeft,
-  Mail,
-  GraduationCap,
-  Building,
-  Calendar,
-  CreditCard,
-  LogOut,
-  ChevronRight,
-  User,
-  Moon,
-} from 'lucide-react-native';
-
-import { Colors } from '@/constants/colors';
+import { ArrowLeft, Mail, GraduationCap, Building, LogOut, ChevronRight, User, Moon, Gamepad2 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { student, logout } = useAuth();
-  
-  // Mantenemos el sistema de temas dinámico de la rama MAIN
   const { colors, isDark, toggleTheme } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
-  const handleLogout = () => {
-    logout();
-    router.replace('/login');
-  };
-
-  // Mantenemos tus tipos seguros de la rama FEATURE
   const infoRows = [
     { icon: User, label: 'Student ID', value: student?.studentIdNumber },
     { icon: Mail, label: 'Institutional Email', value: student?.email },
@@ -49,38 +20,41 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} bounces={false} contentContainerStyle={styles.content}>
-      {/* ─── HEADER (Estilo Main) ─── */}
+      {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Student Profile</Text>
-        <View style={{ width: 36 }} /> {/* Espaciador invisible para centrar el título */}
+        <View style={{ width: 36 }} />
       </View>
 
-      {/* ─── HERO PROFILE (Estilo Main + Datos Seguros Feature) ─── */}
+      {/* HERO SECTOR (FOTO INSTITUCIONAL FIJA) */}
       <View style={styles.profileHero}>
         <View style={styles.avatarWrapper}>
-          <Image
-            source={{
-              uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
-            }}
-            style={styles.avatar}
-          />
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>STUDENT</Text>
-          </View>
+          <Image source={{ uri: student?.avatarUrl }} style={styles.avatar} />
         </View>
-        {/* Usamos split('@') para sacar el nombre del correo, evitando el error de fullName */}
         <Text style={styles.fullName}>{student?.email?.split('@')[0] || 'Student'}</Text>
         <Text style={styles.username}>ID: {student?.studentIdNumber || 'N/A'}</Text>
-        <View style={styles.yearPill}>
-          <GraduationCap size={13} color={colors.primaryRed} />
-          <Text style={styles.yearPillText}>{student?.degree || 'Academic Program'}</Text>
-        </View>
       </View>
 
-      {/* ─── INFORMACIÓN ACADÉMICA ─── */}
+      {/* BANNER ACCESO ACCESORIO MONSTRUO 3D (SECCIÓN APARTE GAMING) */}
+      <TouchableOpacity 
+        style={[styles.gamingCard, { backgroundColor: colors.primaryRedLight, borderColor: colors.primaryRed }]}
+        onPress={() => router.push('/avatar')}
+        activeOpacity={0.9}
+      >
+        <View style={[styles.gamingIconWrapper, { backgroundColor: colors.primaryRed }]}>
+          <Gamepad2 size={22} color="#fff" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.gamingTitle, { color: colors.primaryRed }]}>Monster Studio 3D</Text>
+          <Text style={[styles.gamingSubtitle, { color: colors.textSecondary }]}>Customize your game avatar outfit</Text>
+        </View>
+        <ChevronRight size={20} color={colors.primaryRed} />
+      </TouchableOpacity>
+
+      {/* ACADEMIC INFORMATION */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Academic Information</Text>
         {infoRows.map(({ icon: Icon, label, value }) => (
@@ -96,7 +70,7 @@ export default function ProfileScreen() {
         ))}
       </View>
 
-      {/* ─── PREFERENCIAS (Mantenemos el Dark Mode de Main) ─── */}
+      {/* PREFERENCES */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Preferences</Text>
         <View style={styles.preferenceRow}>
@@ -113,26 +87,8 @@ export default function ProfileScreen() {
         </View>
       </View>
 
-      {/* ─── ENLACES RÁPIDOS ─── */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Quick Links</Text>
-        {[
-          { icon: CreditCard, label: 'View Student ID Card', route: '/student-id' },
-          { icon: Calendar, label: 'Academic Calendar', route: '/calendar' },
-          { icon: Mail, label: 'Printer', route: '/printer' },
-        ].map(({ icon: Icon, label, route }) => (
-          <TouchableOpacity key={label} style={styles.linkRow} onPress={() => router.push(route as any)}>
-            <View style={styles.linkIcon}>
-              <Icon size={18} color={colors.primaryRed} />
-            </View>
-            <Text style={styles.linkLabel}>{label}</Text>
-            <ChevronRight size={16} color={colors.textTertiary} />
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* ─── CERRAR SESIÓN ─── */}
-      <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
+      {/* LOGOUT */}
+      <TouchableOpacity style={styles.logoutBtn} onPress={logout} activeOpacity={0.8}>
         <LogOut size={18} color={colors.primaryRed} />
         <Text style={styles.logoutText}>Sign out</Text>
       </TouchableOpacity>
@@ -140,121 +96,33 @@ export default function ProfileScreen() {
   );
 }
 
-// ─── HOJAS DE ESTILO DINÁMICAS (Main) ───
 const makeStyles = (colors: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { paddingBottom: 24 },
-  header: {
-    backgroundColor: colors.primaryRed,
-    paddingTop: 56,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  header: { backgroundColor: colors.primaryRed, paddingTop: 56, paddingBottom: 20, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
+  profileHero: { alignItems: 'center', paddingVertical: 20 },
+  avatarWrapper: { marginBottom: 10 },
+  avatar: { width: 84, height: 84, borderRadius: 42, borderWidth: 2, borderColor: colors.cardBorder },
+  fullName: { fontSize: 18, fontWeight: '800', color: colors.textPrimary },
+  username: { fontSize: 13, color: colors.textSecondary },
+  
+  gamingCard: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 20, marginBottom: 16, padding: 14, borderRadius: 16, borderWidth: 1, gap: 12 },
+  gamingIconWrapper: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyCentered: 'center', justifyContent: 'center' },
+  gamingTitle: { fontSize: 15, fontWeight: '700' },
+  gamingSubtitle: { fontSize: 12, marginTop: 2 },
 
-  profileHero: { alignItems: 'center', paddingVertical: 28, paddingHorizontal: 20 },
-  avatarWrapper: { position: 'relative', marginBottom: 14 },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    borderWidth: 3,
-    borderColor: colors.primaryRed,
-  },
-  roleBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    backgroundColor: colors.primaryRed,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.background,
-  },
-  roleBadgeText: { fontSize: 9, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
-  fullName: { fontSize: 20, fontWeight: '800', color: colors.textPrimary, marginBottom: 4 },
-  username: { fontSize: 14, color: colors.textSecondary, marginBottom: 12 },
-  yearPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.primaryRedLight,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  yearPillText: { fontSize: 12, fontWeight: '600', color: colors.primaryRed },
-
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: 16,
-    marginHorizontal: 20,
-    marginBottom: 16,
-    padding: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: 14,
-  },
-  infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.separator },
-  infoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: colors.primaryRedLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
+  card: { backgroundColor: colors.card, borderRadius: 16, marginHorizontal: 20, marginBottom: 16, padding: 18, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 2 },
+  cardTitle: { fontSize: 12, fontWeight: '700', color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.separator },
+  infoIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: colors.primaryRedLight, alignItems: 'center', justifyContent: 'center' },
   infoContent: { flex: 1 },
-  infoLabel: { fontSize: 11, color: colors.textTertiary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.3, marginBottom: 2 },
-  infoValue: { fontSize: 14, color: colors.textPrimary, fontWeight: '500' },
-
-  preferenceRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  linkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
-  linkIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: colors.primaryRedLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  linkLabel: { flex: 1, fontSize: 15, color: colors.textPrimary, fontWeight: '500' },
-
-  logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginHorizontal: 20,
-    marginTop: 4,
-    paddingVertical: 14,
-    backgroundColor: colors.card,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: colors.primaryRedLight,
-  },
+  infoLabel: { fontSize: 10, color: colors.textTertiary, fontWeight: '600' },
+  infoValue: { fontSize: 14, color: colors.textPrimary },
+  preferenceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
+  linkIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: colors.primaryRedLight, alignItems: 'center', justifyContent: 'center' },
+  linkLabel: { fontSize: 15, color: colors.textPrimary, fontWeight: '500' },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginHorizontal: 20, paddingVertical: 14, backgroundColor: colors.card, borderRadius: 14, borderWidth: 1.5, borderColor: colors.primaryRedLight },
   logoutText: { fontSize: 15, color: colors.primaryRed, fontWeight: '600' },
 });

@@ -20,6 +20,7 @@ function AppStack() {
         <Stack.Screen name="chatbot" options={{ presentation: 'card' }} />
         <Stack.Screen name="menu" options={{ presentation: 'modal' }} />
         <Stack.Screen name="+not-found" />
+        <Stack.Screen name="avatar" options={{ presentation: 'modal' }} />
       </Stack>
       <StatusBar style={isDark ? 'light' : 'dark'} />
     </>
