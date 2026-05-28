@@ -782,7 +782,7 @@ export default function CalendarScreen() {
                   <Text style={styles.stepIndicatorText}>1</Text>
                 </View>
                 <Text style={styles.stepBodyText}>
-                  Entra a la <Text style={styles.boldText}>Chrome Web Store</Text> y busca <Text style={styles.boldText}>"Exportador de horario y calendario UPF"</Text>. Instálala en tu navegador.
+                  Entra a la <Text style={styles.boldText}>Chrome Web Store</Text> y busca <Text style={styles.boldText}>&quot;Exportador de horario y calendario UPF&quot;</Text>. Instálala en tu navegador.
                 </Text>
               </View>
 
