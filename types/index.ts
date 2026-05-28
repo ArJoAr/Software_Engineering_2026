@@ -71,6 +71,7 @@ export interface CalendarEvent {
   location?: string;
   type: 'class' | 'exam' | 'deadline' | 'event' | 'google' | 'upf';
   subject?: string;
+  completed?: boolean;
 }
 
 export interface QuickAccessItem {

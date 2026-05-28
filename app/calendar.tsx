@@ -36,6 +36,7 @@ import {
 import { Colors } from '@/constants/colors';
 import { MOCK_CALENDAR } from '@/constants/mockData';
 import type { CalendarEvent } from '@/types';
+import { useEvents } from '@/context/EventContext';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -378,7 +379,7 @@ export default function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [weekBase, setWeekBase]       = useState(today);
   const [monthBase, setMonthBase]     = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [events, setEvents]           = useState<CalendarEvent[]>(MOCK_CALENDAR);
+  const { events, setEvents }         = useEvents();
   const [showModal, setShowModal]     = useState(false);
   
   const [syncing, setSyncing]         = useState(false);
@@ -781,7 +782,7 @@ export default function CalendarScreen() {
                   <Text style={styles.stepIndicatorText}>1</Text>
                 </View>
                 <Text style={styles.stepBodyText}>
-                  Entra a la <Text style={styles.boldText}>Chrome Web Store</Text> y busca <Text style={styles.boldText}>"Exportador de horario y calendario UPF"</Text>. Instálala en tu navegador.
+                  Entra a la <Text style={styles.boldText}>Chrome Web Store</Text> y busca <Text style={styles.boldText}>&quot;Exportador de horario y calendario UPF&quot;</Text>. Instálala en tu navegador.
                 </Text>
               </View>
 

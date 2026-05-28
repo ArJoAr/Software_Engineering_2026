@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Linking,
 } from 'react-native';
 import {
   BookOpen,
@@ -22,16 +23,16 @@ import {
 import { Colors } from '@/constants/colors';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'expo-router';
 
 const ACADEMIC_TOOLS = [
-  { id: 'campus', icon: Globe, label: 'Campus Global', desc: 'Enrollment, grades, records', color: Colors.categoryColors.conference },
-  { id: 'aula', icon: BookOpen, label: 'Aula Global', desc: 'Course materials & assignments', color: Colors.academic },
-  { id: 'library', icon: Library, label: 'Library Account', desc: 'Books, journals, reservations', color: Colors.success },
-  { id: 'agenda', icon: ClipboardList, label: 'Study Agenda', desc: 'Tasks, deadlines, notes', color: Colors.categoryColors.culture },
-  { id: 'grades', icon: TrendingUp, label: 'My Grades', desc: 'Academic transcript', color: Colors.info },
-  { id: 'certificates', icon: Award, label: 'Certificates', desc: 'Request official documents', color: Colors.warning },
-  { id: 'tutoring', icon: Users, label: 'Academic Tutoring', desc: 'Book an advisor session', color: Colors.categoryColors.events },
-  { id: 'exams', icon: FileText, label: 'Exam Enrollment', desc: 'Register for final exams', color: Colors.primaryRed },
+  { id: 'campus', icon: Globe, label: 'Campus Global', desc: 'Enrollment, grades, records', color: Colors.categoryColors.conference, url: 'https://www.upf.edu/c/portal/login?p_l_id=263404111&redirect=/intranet/campus-global' },
+  { id: 'aula', icon: BookOpen, label: 'Aula Global', desc: 'Course materials & assignments', color: Colors.academic, url: 'https://aulaglobal.upf.edu/' },
+  { id: 'library', icon: Library, label: 'Library Account', desc: 'Books, journals, reservations', color: Colors.success, url: 'https://upfinder.upf.edu/discovery/account?vid=34CSUC_UPF:VU1' },
+  { id: 'agenda', icon: ClipboardList, label: 'To-Do List', desc: 'Future exams & homeworks', color: Colors.categoryColors.culture, route: '/todo' },
+  { id: 'secretariat', icon: Award, label: 'Virtual Secretariat', desc: 'Grades & certificates', color: Colors.warning, url: 'https://secretariavirtual.upf.edu/' },
+  { id: 'tutoring', icon: Users, label: 'Academic Tutoring', desc: 'Tutor lists log in', color: Colors.categoryColors.events, url: 'https://www.upf.edu/es/web/eines-tic-docencia/tutories' },
+  { id: 'exams', icon: FileText, label: 'Exam Dates', desc: 'Exam date webpage', color: Colors.primaryRed, url: 'https://www.upf.edu/web/enginyeria/calendari-examens' },
 ];
 
 const COURSES = [
@@ -44,6 +45,7 @@ const COURSES = [
 export default function AcademicScreen() {
   const { student } = useAuth();
   const { colors } = useTheme();
+  const router = useRouter();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const avg = COURSES.filter((c) => c.grade !== null).reduce((acc, c) => acc + (c.grade ?? 0), 0) / COURSES.filter((c) => c.grade !== null).length;
@@ -80,8 +82,19 @@ export default function AcademicScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Academic Services</Text>
         <View style={styles.toolsGrid}>
-          {ACADEMIC_TOOLS.map(({ id, icon: Icon, label, desc, color }) => (
-            <TouchableOpacity key={id} style={styles.toolCard} activeOpacity={0.8}>
+          {ACADEMIC_TOOLS.map(({ id, icon: Icon, label, desc, color, url, route }) => (
+            <TouchableOpacity 
+              key={id} 
+              style={styles.toolCard} 
+              activeOpacity={0.8}
+              onPress={() => {
+                if (url) {
+                  Linking.openURL(url);
+                } else if (route) {
+                  router.push(route as any);
+                }
+              }}
+            >
               <View style={[styles.toolIcon, { backgroundColor: color + '18' }]}>
                 <Icon size={20} color={color} />
               </View>
