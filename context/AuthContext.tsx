@@ -3,32 +3,61 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { MOCK_STUDENT } from '@/constants/mockData';
 import type { Student } from '@/types';
 
+// ─── 1. NUEVOS TIPOS PARA EL AVATAR 3D ───
+export interface Monster3DConfiguration {
+  style: string;     // 'robot', 'ghost', 'monster', etc.
+  color: string;     // 'white', 'teal', 'red'
+  accessory: string; // 'none', 'gorra_upf', 'cascos', etc.
+  pin?: string;      // 'none', 'heart' (Añadido para soportar tu nueva capa de pins)
+}
+
+// Extendemos el tipo Student original para que acepte las propiedades del avatar
+type ExtendedStudent = Student & { 
+  photoUrl?: string; 
+  monster3D?: Monster3DConfiguration 
+};
+
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
-  student: Student | null;
+  student: ExtendedStudent | null;
+  // Métodos de MAIN
   login: (username: string, password: string) => Promise<{ success: boolean; error?: string; needsOnboarding?: boolean }>;
   register: (username: string, password: string, email: string) => Promise<{ success: boolean; error?: string; needsOnboarding?: boolean }>;
-  updateProfile: (updates: Partial<Student>) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (updates: Partial<ExtendedStudent>) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  // Métodos de AVATAR BRANCH
+  updateMonster3D: (config: Monster3DConfiguration) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const AUTH_STORAGE_KEY = '@upf_campus_auth_student';
-const USERS_DB_KEY = '@upf_users_db';
+const USERS_DB_KEY = '@upf_users_db'; // Base de datos de MAIN
+
+const DEFAULT_MONSTER: Monster3DConfiguration = {
+  style: 'robot',
+  color: 'white',
+  accessory: 'none',
+  pin: 'none',
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [student, setStudent] = useState<Student | null>(null);
+  const [student, setStudent] = useState<ExtendedStudent | null>(null);
 
+  // ─── CARGA DE SESIÓN (Fusionada) ───
   useEffect(() => {
     const loadSession = async () => {
       try {
         const storedStudent = await AsyncStorage.getItem(AUTH_STORAGE_KEY);
         if (storedStudent) {
-          setStudent(JSON.parse(storedStudent));
+          const parsed: ExtendedStudent = JSON.parse(storedStudent);
+          // Inyectamos el avatar por defecto si es un usuario antiguo que no lo tiene
+          if (!parsed.monster3D) parsed.monster3D = DEFAULT_MONSTER;
+          
+          setStudent(parsed);
           setIsAuthenticated(true);
         }
       } catch (e) {
@@ -40,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loadSession();
   }, []);
 
+  // ─── VALIDACIONES DE MAIN ───
   const validateEmail = (email: string) => {
     const emailPattern = /^([a-zA-Z]+)\.([a-zA-Z]+)(?:\d{2})?@([a-zA-Z0-9-]+\.)?upf\.edu$/i;
     const match = email.match(emailPattern);
@@ -65,11 +95,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return [];
     }
   };
-
-  const saveUsersDB = async (db: any[]) => {
+const saveUsersDB = async (db: any[]) => {
     await AsyncStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
   };
 
+  // ─── LÓGICA DE LOGIN & REGISTRO UNIFICADA ───
   const login = async (
     username: string,
     password: string
@@ -81,17 +111,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (userRecord) {
       try {
-        await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userRecord.student));
-        setStudent(userRecord.student);
+        const studentData = userRecord.student;
+        
+        // Inicialización de seguridad para la configuración 3D
+        if (!studentData.monster3D) {
+          studentData.monster3D = DEFAULT_MONSTER;
+        } else if (!studentData.monster3D.pin) {
+          // Si tiene avatar pero es antiguo y no tiene la propiedad del corazón, se la asignamos
+          studentData.monster3D.pin = 'none';
+        }
+
+        await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(studentData));
+        setStudent(studentData);
         setIsAuthenticated(true);
-        const needsOnboarding = !userRecord.student.faculty || !userRecord.student.degree;
+        
+        const needsOnboarding = !studentData.faculty || !studentData.degree;
         return { success: true, needsOnboarding };
       } catch (e) {
         return { success: false, error: 'Failed to save session.' };
       }
     }
-
-
     return { success: false, error: 'Invalid username or password.' };
   };
 
@@ -112,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: false, error: 'User already exists.' };
     }
 
-    const newStudent: Student = {
+    const newStudent: ExtendedStudent = {
       ...MOCK_STUDENT,
       id: username.toLowerCase(),
       studentIdNumber: username.toLowerCase(),
@@ -123,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: emailValidation.role,
       faculty: '',
       degree: '',
+      monster3D: DEFAULT_MONSTER, // 🆕 Añadimos el avatar por defecto al registrarse
     };
 
     db.push({ student: newStudent, password });
@@ -138,7 +178,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateProfile = async (updates: Partial<Student>): Promise<{ success: boolean; error?: string }> => {
+  // ─── ACTUALIZACIÓN DE PERFIL (MAIN) ───
+  const updateProfile = async (updates: Partial<ExtendedStudent>): Promise<{ success: boolean; error?: string }> => {
     if (!student) return { success: false, error: 'Not logged in' };
     
     if (updates.email) {
@@ -155,9 +196,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const updatedStudent = { ...student, ...updates };
     
     try {
+      // 1. Guardamos en la sesión actual
       await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedStudent));
       setStudent(updatedStudent);
 
+      // 2. Guardamos en la base de datos global de Main
       const db = await getUsersDB();
       const index = db.findIndex((u: any) => u.student.id === student.id);
       if (index !== -1) {
@@ -171,6 +214,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // ─── FUNCIÓN EXCLUSIVA DEL AVATAR (AVATAR BRANCH) ───
+  // Aprovecha la función updateProfile de Main para que el avatar se guarde en la BD y no se borre
+  const updateMonster3D = async (config: Monster3DConfiguration) => {
+    await updateProfile({ monster3D: config });
+  };
+
   const logout = async () => {
     try {
       await AsyncStorage.removeItem(AUTH_STORAGE_KEY);
@@ -182,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, student, login, register, updateProfile, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, student, login, register, updateProfile, updateMonster3D, logout }}>
       {children}
     </AuthContext.Provider>
   );

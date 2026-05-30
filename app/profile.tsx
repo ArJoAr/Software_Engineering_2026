@@ -24,6 +24,7 @@ import {
   Edit2,
   Check,
   Camera,
+  Sparkles,
 } from 'lucide-react-native';
 
 import * as ImagePicker from 'expo-image-picker';
@@ -31,6 +32,23 @@ import * as ImagePicker from 'expo-image-picker';
 
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
+
+// ─── IMPORTACIONES DE AVATAR (Ajusta la ruta si tu carpeta es diferente, ej: '../avatar/base_robot.png') ───
+const RobotBaseImg = require('./avatar/base_robot.png');
+const GhostBaseImg = require('./avatar/base_ghost.png');
+const MonsterBaseImg = require('./avatar/base_monster.png');
+
+const GorraUpfRobotImg = require('./avatar/gorra_upf_robot.png');
+const GorraUpfGhostImg = require('./avatar/gorra_upf_ghost.png');
+const GorraUpfMonsterImg = require('./avatar/gorra_upf_monster.png');
+
+const CascosRobotImg = require('./avatar/cascos_robot.png');
+const CuchilloGhostImg = require('./avatar/cuchillo_ghost.png');
+const CuernosMonsterImg = require('./avatar/cuernos_monster.png');
+
+const HeartRobotImg = require('./avatar/heart_robot.png');
+const HeartGhostImg = require('./avatar/heart_ghost.png');
+const HeartMonsterImg = require('./avatar/heart_monster.png');
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -75,6 +93,38 @@ export default function ProfileScreen() {
     }
   };
 
+  // ─── LÓGICA DE RENDERIZADO DEL AVATAR (Traída de tu branch) ───
+  const avatarStyle = (student?.monster3D?.style as string) || 'robot';
+  const avatarAccessory = (student?.monster3D?.accessory as string) || 'none';
+  const avatarPin = (student?.monster3D?.pin as string) || 'none';
+
+  const getBaseImage = () => {
+    if (avatarStyle === 'ghost') return GhostBaseImg;
+    if (avatarStyle === 'monster') return MonsterBaseImg;
+    return RobotBaseImg;
+  };
+
+  const getAccessoryImage = () => {
+    if (avatarAccessory === 'gorra_upf') {
+      if (avatarStyle === 'ghost') return GorraUpfGhostImg;
+      if (avatarStyle === 'monster') return GorraUpfMonsterImg;
+      return GorraUpfRobotImg;
+    }
+    if (avatarAccessory === 'cascos' && avatarStyle === 'robot') return CascosRobotImg;
+    if (avatarAccessory === 'cuchillo' && avatarStyle === 'ghost') return CuchilloGhostImg;
+    if (avatarAccessory === 'cuernos' && avatarStyle === 'monster') return CuernosMonsterImg;
+    return null;
+  };
+
+  const getPinImage = () => {
+    if (avatarPin === 'heart') {
+      if (avatarStyle === 'ghost') return HeartGhostImg;
+      if (avatarStyle === 'monster') return HeartMonsterImg;
+      return HeartRobotImg;
+    }
+    return null;
+  };
+
   const infoRows = [
     { icon: User, label: 'Student ID', value: student?.studentIdNumber },
     { icon: Mail, label: 'Institutional Email', value: student?.email },
@@ -106,28 +156,57 @@ export default function ProfileScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* ─── HERO PROFILE (Estilo Main + Datos Seguros Feature) ─── */}
+      {/* ─── HERO PROFILE CON DOBLE AVATAR (Merge Features) ─── */}
       <View style={styles.profileHero}>
-        <TouchableOpacity style={styles.avatarWrapper} onPress={handlePickImage} activeOpacity={0.85}>
-          {student?.photoUrl ? (
-            <Image
-              source={{ uri: student.photoUrl }}
-              style={styles.avatar}
-            />
-          ) : (
-            <View style={[styles.avatar, { backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }]}>
-              <Text style={{ fontSize: 36, color: '#fff', fontWeight: 'bold' }}>
-                {student?.firstName?.[0]?.toUpperCase() || 'U'}
-              </Text>
-            </View>
-          )}
-          <View style={{ position: 'absolute', bottom: -5, left: 10, backgroundColor: colors.primaryRed, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.background, zIndex: 10 }}>
-            <Camera size={14} color="#fff" />
-          </View>
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>{student?.role || 'STUDENT'}</Text>
-          </View>
-        </TouchableOpacity>
+        {/* ─── CONTENEDOR UNIFICADO: HERO PROFILE CON DOS AVATARES ─── */}
+<View style={styles.avatarsRow}>
+  
+  {/* 1. CÍRCULO: FOTO DE PERFIL REAL (Con diseño mejorado de Main) */}
+  <TouchableOpacity style={styles.avatarWrapper} onPress={handlePickImage} activeOpacity={0.85}>
+    {student?.photoUrl ? (
+      <Image source={{ uri: student.photoUrl }} style={styles.avatar} />
+    ) : (
+      <View style={[styles.avatar, { backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }]}>
+        <Text style={{ fontSize: 36, color: '#fff', fontWeight: 'bold' }}>
+          {student?.firstName?.[0]?.toUpperCase() || 'U'}
+        </Text>
+      </View>
+    )}
+    {/* Insignia de cámara con la posición fija exacta de Main */}
+    <View style={{ position: 'absolute', bottom: -5, left: 10, backgroundColor: colors.primaryRed, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.background, zIndex: 10 }}>
+      <Camera size={14} color="#fff" />
+    </View>
+    <View style={styles.roleBadge}>
+      <Text style={styles.roleBadgeText}>{student?.role || 'STUDENT'}</Text>
+    </View>
+  </TouchableOpacity>
+
+  {/* 2. CÍRCULO: AVATAR 3D INTERACTIVO (Tu Feature Branch adaptada al inglés) */}
+  <TouchableOpacity 
+    style={styles.avatarWrapper} 
+    onPress={() => router.push('/avatar')} 
+    activeOpacity={0.85}
+  >
+    <View style={[styles.avatar, styles.miniCanvas]}>
+      <Image source={getBaseImage()} style={styles.miniLayer} resizeMode="contain" />
+      {avatarAccessory !== 'none' && getAccessoryImage() && (
+        <Image source={getAccessoryImage()} style={styles.miniLayer} resizeMode="contain" />
+      )}
+      {avatarPin !== 'none' && getPinImage() && (
+        <Image source={getPinImage()} style={styles.miniLayer} resizeMode="contain" />
+      )}
+    </View>
+    {/* Insignia de chispas en posición absoluta simétrica a la de Main */}
+    <View style={{ position: 'absolute', bottom: -5, left: 10, backgroundColor: '#000', width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.background, zIndex: 10 }}>
+      <Sparkles size={14} color="#fff" />
+    </View>
+    <View style={[styles.roleBadge, { backgroundColor: '#000' }]}>
+      <Text style={styles.roleBadgeText}>STUDIO 3D</Text>
+    </View>
+  </TouchableOpacity>
+
+</View>
+
         <Text style={styles.fullName}>{student?.fullName || 'User'}</Text>
         <Text style={styles.username}>ID: {student?.studentIdNumber || 'N/A'}</Text>
         
@@ -183,7 +262,7 @@ export default function ProfileScreen() {
         )}
       </View>
 
-      {/* ─── PREFERENCIAS (Mantenemos el Dark Mode de Main) ─── */}
+      {/* ─── PREFERENCIAS ─── */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Preferences</Text>
         <View style={styles.preferenceRow}>
@@ -251,13 +330,50 @@ const makeStyles = (colors: any) => StyleSheet.create({
   headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
 
   profileHero: { alignItems: 'center', paddingVertical: 28, paddingHorizontal: 20 },
-  avatarWrapper: { position: 'relative', marginBottom: 14 },
+  
+  // 🆕 Contenedor para alinear los dos avatares juntos
+  avatarsRow: { 
+    flexDirection: 'row', 
+    gap: 24, 
+    marginBottom: 14,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  avatarWrapper: { position: 'relative' },
   avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 88,  // Reducido un pelín (de 96 a 88) para que quepan ambos perfectos
+    height: 88,
+    borderRadius: 44,
     borderWidth: 3,
     borderColor: colors.primaryRed,
+  },
+  
+  // 🆕 Estilos del lienzo miniatura para el Avatar 3D
+  miniCanvas: {
+    backgroundColor: '#F4F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden', // Importante para que las partes grandes del PNG no se salgan de la bola
+    borderColor: '#000' // Borde negro para diferenciarlo de la foto real
+  },
+  miniLayer: {
+    position: 'absolute',
+    width: '180%',
+    height: '180%',
+  },
+
+  iconBadge: {
+    position: 'absolute', 
+    bottom: -5, 
+    left: 4, 
+    width: 28, 
+    height: 28, 
+    borderRadius: 14, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderWidth: 2, 
+    borderColor: colors.background, 
+    zIndex: 10
   },
   roleBadge: {
     position: 'absolute',
@@ -269,8 +385,10 @@ const makeStyles = (colors: any) => StyleSheet.create({
     borderRadius: 10,
     borderWidth: 2,
     borderColor: colors.background,
+    zIndex: 10
   },
   roleBadgeText: { fontSize: 9, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
+  
   fullName: { fontSize: 20, fontWeight: '800', color: colors.textPrimary, marginBottom: 4 },
   username: { fontSize: 14, color: colors.textSecondary, marginBottom: 12 },
   yearPill: {
