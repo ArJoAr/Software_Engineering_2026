@@ -296,12 +296,6 @@ export default function AvatarScreen() {
 
         </View>
 
-        <View style={styles.infoBox}>
-          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-            The system concurrently processes head accessories and chest stickers, dynamically adapting to each base model mesh.
-          </Text>
-        </View>
-
       </ScrollView>
     </SafeAreaView>
   );
