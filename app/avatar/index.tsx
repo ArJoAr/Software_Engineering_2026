@@ -16,19 +16,19 @@ const GorraUpfGhostImg = require('./gorra_upf_ghost.png');
 const GorraUpfMonsterImg = require('./gorra_upf_monster.png');
 
 // 3. IMPORTACIÓN DE ACCESORIOS DE CABEZA ÚNICOS
-const CascosRobotImg = require('./cascos_robot.png');     // 🔄 Cambiado por tornillo
+const CascosRobotImg = require('./cascos_robot.png');
 const CuchilloGhostImg = require('./cuchillo_ghost.png');
 const CuernosMonsterImg = require('./cuernos_monster.png');
 
-// 4. 🆕 IMPORTACIÓN DE PINS (SECCIÓN COCO/PECHO)
+// 4. IMPORTACIÓN DE PINS (SECCIÓN COCO/PECHO)
 const HeartRobotImg = require('./heart_robot.png');
 const HeartGhostImg = require('./heart_ghost.png');
 const HeartMonsterImg = require('./heart_monster.png');
 
-// Tipos válidos para los estados
+// Tipos válidos para los estados (Traducidos a inglés)
 type CharacterType = 'robot' | 'ghost' | 'monster';
-type AccessoryType = 'none' | 'gorra_upf' | 'cascos' | 'cuchillo' | 'cuernos';
-type PinType = 'none' | 'heart'; // 🆕 Nuevo tipo para la sección Pins
+type AccessoryType = 'none' | 'gorra_upf' | 'headphones' | 'knife' | 'horns';
+type PinType = 'none' | 'heart';
 
 export default function AvatarScreen() {
   const router = useRouter();
@@ -40,21 +40,26 @@ export default function AvatarScreen() {
     (student?.monster3D?.style as CharacterType) || 'robot'
   );
 
-  // Estado del accesorio de cabeza equipado
-  const [selectedAccessory, setSelectedAccessory] = useState<AccessoryType>(
-    (student?.monster3D?.accessory as AccessoryType) || 'none'
-  );
+  // Estado del accesorio de cabeza equipado (Mapeado a los nuevos strings en inglés)
+  const [selectedAccessory, setSelectedAccessory] = useState<AccessoryType>(() => {
+    const current = student?.monster3D?.accessory;
+    if (current === 'cascos') return 'headphones';
+    if (current === 'cuchillo') return 'knife';
+    if (current === 'cuernos') return 'horns';
+    return (current as AccessoryType) || 'none';
+  });
 
-  // 🆕 Estado para la nueva sección de Pins
-  const [selectedPin, setSelectedPin] = useState<PinType>('none');
+  // Estado para la sección de Pins (Extrayendo el valor persistente de la sesión)
+  const [selectedPin, setSelectedPin] = useState<PinType>(
+    (student?.monster3D?.pin as PinType) || 'none'
+  );
 
   const handleSave = async () => {
     await updateMonster3D({
       style: selectedCharacter,
       color: student?.monster3D?.color || 'white',
       accessory: selectedAccessory,
-      // Nota: Si tu backend soporta guardar el pin, puedes pasarle la variable aquí:
-      // pin: selectedPin,
+      pin: selectedPin,
     });
     router.back();
   };
@@ -66,7 +71,7 @@ export default function AvatarScreen() {
     return RobotBaseImg;
   };
 
-  // Devuelve el accesorio de cabeza según la selección y el personaje activo
+  // Devuelve el accesorio de cabeza según la selección internacionalizada
   const getAccessoryImage = () => {
     if (selectedAccessory === 'gorra_upf') {
       if (selectedCharacter === 'ghost') return GorraUpfGhostImg;
@@ -74,14 +79,14 @@ export default function AvatarScreen() {
       return GorraUpfRobotImg;
     }
     
-    if (selectedAccessory === 'cascos' && selectedCharacter === 'robot') return CascosRobotImg;
-    if (selectedAccessory === 'cuchillo' && selectedCharacter === 'ghost') return CuchilloGhostImg;
-    if (selectedAccessory === 'cuernos' && selectedCharacter === 'monster') return CuernosMonsterImg;
+    if (selectedAccessory === 'headphones' && selectedCharacter === 'robot') return CascosRobotImg;
+    if (selectedAccessory === 'knife' && selectedCharacter === 'ghost') return CuchilloGhostImg;
+    if (selectedAccessory === 'horns' && selectedCharacter === 'monster') return CuernosMonsterImg;
 
     return null;
   };
 
-  // 🆕 FUNCIÓN CLAVE: Devuelve el PNG del Pin adaptado dinámicamente al pecho de cada personaje
+  // Devuelve el PNG del Pin adaptado dinámicamente al pecho de cada personaje
   const getPinImage = () => {
     if (selectedPin === 'heart') {
       if (selectedCharacter === 'ghost') return HeartGhostImg;
@@ -89,6 +94,11 @@ export default function AvatarScreen() {
       return HeartRobotImg;
     }
     return null;
+  };
+
+  // Formateador estético para la barra de estado flotante negra
+  const formatBadgeText = (text: string) => {
+    return text.replace('_', ' ').toUpperCase();
   };
 
   return (
@@ -124,7 +134,7 @@ export default function AvatarScreen() {
             />
           )}
 
-          {/* CAPA 3: 🆕 Pin en el Pecho Inteligente Superpuesto */}
+          {/* CAPA 3: Pin en el Pecho Inteligente Superpuesto */}
           {selectedPin !== 'none' && getPinImage() && (
             <Image 
               source={getPinImage()} 
@@ -137,7 +147,7 @@ export default function AvatarScreen() {
         <View style={styles.badgeHD}>
           <Sparkles size={12} color="#fff" />
           <Text style={styles.badgeText}>
-            {selectedCharacter.toUpperCase()} + {selectedAccessory.toUpperCase()} + PIN:{selectedPin.toUpperCase()}
+            {selectedCharacter.toUpperCase()} + {formatBadgeText(selectedAccessory)} + PIN:{selectedPin.toUpperCase()}
           </Text>
         </View>
       </View>
@@ -158,7 +168,7 @@ export default function AvatarScreen() {
             ]}
             onPress={() => {
               setSelectedCharacter('robot');
-              if (['cuchillo', 'cuernos'].includes(selectedAccessory)) setSelectedAccessory('none');
+              if (['knife', 'horns'].includes(selectedAccessory)) setSelectedAccessory('none');
             }}
           >
             <Text style={[styles.chipText, { color: selectedCharacter === 'robot' ? '#fff' : colors.textPrimary }, selectedCharacter === 'robot' && { fontWeight: '700' }]}>
@@ -175,7 +185,7 @@ export default function AvatarScreen() {
             ]}
             onPress={() => {
               setSelectedCharacter('ghost');
-              if (['cascos', 'cuernos'].includes(selectedAccessory)) setSelectedAccessory('none');
+              if (['headphones', 'horns'].includes(selectedAccessory)) setSelectedAccessory('none');
             }}
           >
             <Text style={[styles.chipText, { color: selectedCharacter === 'ghost' ? '#fff' : colors.textPrimary }, selectedCharacter === 'ghost' && { fontWeight: '700' }]}>
@@ -192,7 +202,7 @@ export default function AvatarScreen() {
             ]}
             onPress={() => {
               setSelectedCharacter('monster');
-              if (['cascos', 'cuchillo'].includes(selectedAccessory)) setSelectedAccessory('none');
+              if (['headphones', 'knife'].includes(selectedAccessory)) setSelectedAccessory('none');
             }}
           >
             <Text style={[styles.chipText, { color: selectedCharacter === 'monster' ? '#fff' : colors.textPrimary }, selectedCharacter === 'monster' && { fontWeight: '700' }]}>
@@ -220,39 +230,39 @@ export default function AvatarScreen() {
             <Text style={[styles.chipText, { color: selectedAccessory === 'gorra_upf' ? '#fff' : colors.textPrimary }]}>🎓 UPF CAP</Text>
           </TouchableOpacity>
 
-          {/* Cascos (Exclusivo Robot) */}
+          {/* Headphones (Exclusivo Robot) */}
           {selectedCharacter === 'robot' && (
             <TouchableOpacity 
-              style={[styles.chip, { borderColor: colors.cardBorder }, selectedAccessory === 'cascos' && { backgroundColor: colors.primaryRed, borderColor: colors.primaryRed }]}
-              onPress={() => setSelectedAccessory('cascos')}
+              style={[styles.chip, { borderColor: colors.cardBorder }, selectedAccessory === 'headphones' && { backgroundColor: colors.primaryRed, borderColor: colors.primaryRed }]}
+              onPress={() => setSelectedAccessory('headphones')}
             >
-              <Text style={[styles.chipText, { color: selectedAccessory === 'cascos' ? '#fff' : colors.textPrimary }]}>🎧 CASCOS</Text>
+              <Text style={[styles.chipText, { color: selectedAccessory === 'headphones' ? '#fff' : colors.textPrimary }]}>🎧 HEADPHONES</Text>
             </TouchableOpacity>
           )}
 
-          {/* Cuchillo (Exclusivo Ghost) */}
+          {/* Knife (Exclusivo Ghost) */}
           {selectedCharacter === 'ghost' && (
             <TouchableOpacity 
-              style={[styles.chip, { borderColor: colors.cardBorder }, selectedAccessory === 'cuchillo' && { backgroundColor: colors.primaryRed, borderColor: colors.primaryRed }]}
-              onPress={() => setSelectedAccessory('cuchillo')}
+              style={[styles.chip, { borderColor: colors.cardBorder }, selectedAccessory === 'knife' && { backgroundColor: colors.primaryRed, borderColor: colors.primaryRed }]}
+              onPress={() => setSelectedAccessory('knife')}
             >
-              <Text style={[styles.chipText, { color: selectedAccessory === 'cuchillo' ? '#fff' : colors.textPrimary }]}>🔪 CUCHILLO</Text>
+              <Text style={[styles.chipText, { color: selectedAccessory === 'knife' ? '#fff' : colors.textPrimary }]}>🔪 KNIFE</Text>
             </TouchableOpacity>
           )}
 
-          {/* Cuernos (Exclusivo Monster) */}
+          {/* Horns (Exclusivo Monster) */}
           {selectedCharacter === 'monster' && (
             <TouchableOpacity 
-              style={[styles.chip, { borderColor: colors.cardBorder }, selectedAccessory === 'cuernos' && { backgroundColor: colors.primaryRed, borderColor: colors.primaryRed }]}
-              onPress={() => setSelectedAccessory('cuernos')}
+              style={[styles.chip, { borderColor: colors.cardBorder }, selectedAccessory === 'horns' && { backgroundColor: colors.primaryRed, borderColor: colors.primaryRed }]}
+              onPress={() => setSelectedAccessory('horns')}
             >
-              <Text style={[styles.chipText, { color: selectedAccessory === 'cuernos' ? '#fff' : colors.textPrimary }]}>😈 CUERNOS</Text>
+              <Text style={[styles.chipText, { color: selectedAccessory === 'horns' ? '#fff' : colors.textPrimary }]}>😈 HORNS</Text>
             </TouchableOpacity>
           )}
 
         </View>
 
-        {/* SECCIÓN 3: 🆕 NUEVA SECCIÓN DE PINS */}
+        {/* SECCIÓN 3: NUEVA SECCIÓN DE PINS */}
         <Text style={[styles.sectionTitle, { color: colors.textTertiary }]}>3. Pins & Stickers</Text>
         <View style={styles.row}>
           
@@ -270,7 +280,7 @@ export default function AvatarScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Opción Corazón (Universal, busca el archivo correspondiente de cada uno) */}
+          {/* Opción Corazón (Universal) */}
           <TouchableOpacity 
             style={[
               styles.chip,
@@ -288,7 +298,7 @@ export default function AvatarScreen() {
 
         <View style={styles.infoBox}>
           <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-            El sistema maneja de forma simultánea los accesorios de la cabeza y los stickers del pecho adaptándose a cada modelo base.
+            The system concurrently processes head accessories and chest stickers, dynamically adapting to each base model mesh.
           </Text>
         </View>
 
@@ -316,14 +326,18 @@ const styles = StyleSheet.create({
     overflow: 'visible',
     borderWidth: 4,
     borderColor: '#fff',
-    boxShadow: '0px 12px 30px rgba(0,0,0,0.1)'
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.1,
+    shadowRadius: 30,
+    elevation: 10,
   },
   layerImage: { position: 'absolute', width: '200%', height: '200%' },
   
   badgeHD: { position: 'absolute', bottom: 25, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#000', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
   badgeText: { color: '#fff', fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
 
-  controlPanel: { flex: 1, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, boxShadow: '0px -5px 20px rgba(0,0,0,0.03)' },
+  controlPanel: { flex: 1, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24 },
   sectionTitle: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12, marginTop: 8 },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 },
   chip: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },
