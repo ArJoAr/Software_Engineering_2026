@@ -189,10 +189,10 @@ export default function ProfileScreen() {
   >
     <View style={[styles.avatar, styles.miniCanvas]}>
       <Image source={getBaseImage()} style={styles.miniLayer} resizeMode="contain" />
-      {selectedAccessory !== 'none' && getAccessoryImage() && (
+      {avatarAccessory !== 'none' && getAccessoryImage() && (
         <Image source={getAccessoryImage()} style={styles.miniLayer} resizeMode="contain" />
       )}
-      {selectedPin !== 'none' && getPinImage() && (
+      {avatarPin !== 'none' && getPinImage() && (
         <Image source={getPinImage()} style={styles.miniLayer} resizeMode="contain" />
       )}
     </View>
