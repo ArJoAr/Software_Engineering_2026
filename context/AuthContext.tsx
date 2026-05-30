@@ -95,13 +95,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return [];
     }
   };
-
-  const saveUsersDB = async (db: any[]) => {
+const saveUsersDB = async (db: any[]) => {
     await AsyncStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
   };
 
-  // ─── LÓGICA DE LOGIN & REGISTRO (MAIN) ───
-  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string; needsOnboarding?: boolean }> => {
+  // ─── LÓGICA DE LOGIN & REGISTRO UNIFICADA ───
+  const login = async (
+    username: string,
+    password: string
+  ): Promise<{ success: boolean; error?: string; needsOnboarding?: boolean }> => {
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     const db = await getUsersDB();
@@ -110,11 +112,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (userRecord) {
       try {
         const studentData = userRecord.student;
-        if (!studentData.monster3D) studentData.monster3D = DEFAULT_MONSTER; // Asignamos avatar si no tiene
+        
+        // Inicialización de seguridad para la configuración 3D
+        if (!studentData.monster3D) {
+          studentData.monster3D = DEFAULT_MONSTER;
+        } else if (!studentData.monster3D.pin) {
+          // Si tiene avatar pero es antiguo y no tiene la propiedad del corazón, se la asignamos
+          studentData.monster3D.pin = 'none';
+        }
 
         await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(studentData));
         setStudent(studentData);
         setIsAuthenticated(true);
+        
         const needsOnboarding = !studentData.faculty || !studentData.degree;
         return { success: true, needsOnboarding };
       } catch (e) {

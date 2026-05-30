@@ -1,11 +1,10 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Linking,
 } from 'react-native';
 import {
   BookOpen,
@@ -21,18 +20,17 @@ import {
   Clock,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
-import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'expo-router';
 
 const ACADEMIC_TOOLS = [
-  { id: 'campus', icon: Globe, label: 'Campus Global', desc: 'Enrollment, grades, records', color: Colors.categoryColors.conference, url: 'https://www.upf.edu/c/portal/login?p_l_id=263404111&redirect=/intranet/campus-global' },
-  { id: 'aula', icon: BookOpen, label: 'Aula Global', desc: 'Course materials & assignments', color: Colors.academic, url: 'https://aulaglobal.upf.edu/' },
-  { id: 'library', icon: Library, label: 'Library Account', desc: 'Books, journals, reservations', color: Colors.success, url: 'https://upfinder.upf.edu/discovery/account?vid=34CSUC_UPF:VU1' },
-  { id: 'agenda', icon: ClipboardList, label: 'To-Do List', desc: 'Future exams & homeworks', color: Colors.categoryColors.culture, route: '/todo' },
-  { id: 'secretariat', icon: Award, label: 'Virtual Secretariat', desc: 'Grades & certificates', color: Colors.warning, url: 'https://secretariavirtual.upf.edu/' },
-  { id: 'tutoring', icon: Users, label: 'Academic Tutoring', desc: 'Tutor lists log in', color: Colors.categoryColors.events, url: 'https://www.upf.edu/es/web/eines-tic-docencia/tutories' },
-  { id: 'exams', icon: FileText, label: 'Exam Dates', desc: 'Exam date webpage', color: Colors.primaryRed, url: 'https://www.upf.edu/web/enginyeria/calendari-examens' },
+  { id: 'campus', icon: Globe, label: 'Campus Global', desc: 'Enrollment, grades, records', color: Colors.categoryColors.conference },
+  { id: 'aula', icon: BookOpen, label: 'Aula Global', desc: 'Course materials & assignments', color: Colors.academic },
+  { id: 'library', icon: Library, label: 'Library Account', desc: 'Books, journals, reservations', color: Colors.success },
+  { id: 'agenda', icon: ClipboardList, label: 'Study Agenda', desc: 'Tasks, deadlines, notes', color: Colors.categoryColors.culture },
+  { id: 'grades', icon: TrendingUp, label: 'My Grades', desc: 'Academic transcript', color: Colors.info },
+  { id: 'certificates', icon: Award, label: 'Certificates', desc: 'Request official documents', color: Colors.warning },
+  { id: 'tutoring', icon: Users, label: 'Academic Tutoring', desc: 'Book an advisor session', color: Colors.categoryColors.events },
+  { id: 'exams', icon: FileText, label: 'Exam Enrollment', desc: 'Register for final exams', color: Colors.primaryRed },
 ];
 
 const COURSES = [
@@ -44,9 +42,6 @@ const COURSES = [
 
 export default function AcademicScreen() {
   const { student } = useAuth();
-  const { colors } = useTheme();
-  const router = useRouter();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const avg = COURSES.filter((c) => c.grade !== null).reduce((acc, c) => acc + (c.grade ?? 0), 0) / COURSES.filter((c) => c.grade !== null).length;
 
@@ -82,19 +77,8 @@ export default function AcademicScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Academic Services</Text>
         <View style={styles.toolsGrid}>
-          {ACADEMIC_TOOLS.map(({ id, icon: Icon, label, desc, color, url, route }) => (
-            <TouchableOpacity 
-              key={id} 
-              style={styles.toolCard} 
-              activeOpacity={0.8}
-              onPress={() => {
-                if (url) {
-                  Linking.openURL(url);
-                } else if (route) {
-                  router.push(route as any);
-                }
-              }}
-            >
+          {ACADEMIC_TOOLS.map(({ id, icon: Icon, label, desc, color }) => (
+            <TouchableOpacity key={id} style={styles.toolCard} activeOpacity={0.8}>
               <View style={[styles.toolIcon, { backgroundColor: color + '18' }]}>
                 <Icon size={20} color={color} />
               </View>
@@ -111,14 +95,14 @@ export default function AcademicScreen() {
           <TouchableOpacity key={course.code} style={styles.courseCard} activeOpacity={0.8}>
             <View style={styles.courseLeft}>
               <View style={styles.courseIcon}>
-                <BookOpen size={18} color={colors.academic} />
+                <BookOpen size={18} color={Colors.academic} />
               </View>
               <View style={styles.courseInfo}>
                 <Text style={styles.courseName}>{course.name}</Text>
                 <Text style={styles.courseCode}>{course.code}</Text>
                 <Text style={styles.courseProfessor}>{course.professor}</Text>
                 <View style={styles.courseMetaRow}>
-                  <Clock size={11} color={colors.textTertiary} />
+                  <Clock size={11} color={Colors.textTertiary} />
                   <Text style={styles.courseMeta}>{course.schedule}</Text>
                 </View>
                 <Text style={styles.courseRoom}>Room {course.room}</Text>
@@ -133,7 +117,7 @@ export default function AcademicScreen() {
               ) : (
                 <Text style={styles.gradeNA}>–</Text>
               )}
-              <ChevronRight size={16} color={colors.textTertiary} />
+              <ChevronRight size={16} color={Colors.textTertiary} />
             </View>
           </TouchableOpacity>
         ))}
@@ -144,11 +128,11 @@ export default function AcademicScreen() {
   );
 }
 
-const makeStyles = (colors: typeof Colors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.background },
   content: { paddingBottom: 24 },
   header: {
-    backgroundColor: colors.primaryRed,
+    backgroundColor: Colors.primaryRed,
     paddingTop: 56,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -161,30 +145,28 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
 
   statsRow: {
     flexDirection: 'row',
-    backgroundColor: colors.primaryRedDark,
+    backgroundColor: Colors.primaryRedDark,
     paddingHorizontal: 20,
     paddingBottom: 20,
     paddingTop: 4,
+    gap: 0,
   },
   statBox: {
-    flex: 1,
-    alignItems: 'center',
+    flex: 1, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 12,
-    paddingVertical: 14,
-    marginHorizontal: 4,
+    borderRadius: 12, paddingVertical: 14, marginHorizontal: 4,
   },
   statBoxMid: { borderLeftWidth: 1, borderRightWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
   statValue: { fontSize: 20, fontWeight: '800', color: '#fff' },
   statLabel: { fontSize: 11, color: 'rgba(255,255,255,0.7)', fontWeight: '600', marginTop: 2 },
 
   section: { padding: 20, paddingBottom: 0 },
-  sectionTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary, marginBottom: 14 },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: Colors.textPrimary, marginBottom: 14 },
 
   toolsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   toolCard: {
     width: '47.5%',
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 14,
     padding: 14,
     shadowColor: '#000',
@@ -195,11 +177,11 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
     marginBottom: 4,
   },
   toolIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  toolLabel: { fontSize: 13, fontWeight: '700', color: colors.textPrimary, marginBottom: 2 },
-  toolDesc: { fontSize: 11, color: colors.textTertiary, lineHeight: 15 },
+  toolLabel: { fontSize: 13, fontWeight: '700', color: Colors.textPrimary, marginBottom: 2 },
+  toolDesc: { fontSize: 11, color: Colors.textTertiary, lineHeight: 15 },
 
   courseCard: {
-    backgroundColor: colors.card,
+    backgroundColor: Colors.card,
     borderRadius: 14,
     padding: 14,
     flexDirection: 'row',
@@ -215,19 +197,19 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   courseLeft: { flexDirection: 'row', flex: 1, gap: 12 },
   courseIcon: {
     width: 40, height: 40, borderRadius: 12,
-    backgroundColor: colors.academicLight,
+    backgroundColor: Colors.academicLight,
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   courseInfo: { flex: 1 },
-  courseName: { fontSize: 14, fontWeight: '700', color: colors.textPrimary, marginBottom: 2 },
-  courseCode: { fontSize: 11, color: colors.textTertiary, fontWeight: '600', letterSpacing: 0.3, marginBottom: 3 },
-  courseProfessor: { fontSize: 12, color: colors.textSecondary, marginBottom: 4 },
+  courseName: { fontSize: 14, fontWeight: '700', color: Colors.textPrimary, marginBottom: 2 },
+  courseCode: { fontSize: 11, color: Colors.textTertiary, fontWeight: '600', letterSpacing: 0.3, marginBottom: 3 },
+  courseProfessor: { fontSize: 12, color: Colors.textSecondary, marginBottom: 4 },
   courseMetaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 2 },
-  courseMeta: { fontSize: 11, color: colors.textTertiary },
-  courseRoom: { fontSize: 11, color: colors.textTertiary },
+  courseMeta: { fontSize: 11, color: Colors.textTertiary },
+  courseRoom: { fontSize: 11, color: Colors.textTertiary },
   courseRight: { alignItems: 'center', gap: 6, paddingLeft: 8 },
   gradeBadge: { alignItems: 'center' },
-  gradeValue: { fontSize: 18, fontWeight: '800', color: colors.primaryRed },
-  gradeLabel: { fontSize: 10, color: colors.textTertiary },
-  gradeNA: { fontSize: 18, fontWeight: '400', color: colors.textTertiary },
+  gradeValue: { fontSize: 18, fontWeight: '800', color: Colors.primaryRed },
+  gradeLabel: { fontSize: 10, color: Colors.textTertiary },
+  gradeNA: { fontSize: 18, fontWeight: '400', color: Colors.textTertiary },
 });

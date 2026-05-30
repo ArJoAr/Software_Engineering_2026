@@ -15,6 +15,8 @@ import {
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import { createClient } from '@supabase/supabase-js';
 import {
   ArrowLeft,
@@ -26,33 +28,42 @@ import {
   X,
   Calendar,
   LayoutGrid,
+  Chrome,
+  KeyRound,
+  CalendarDays,
+  FileDown,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { MOCK_CALENDAR } from '@/constants/mockData';
 import type { CalendarEvent } from '@/types';
+import { useEvents } from '@/context/EventContext';
 
-// Asegura que el navegador se cierre al autenticar en dispositivos móviles
 WebBrowser.maybeCompleteAuthSession();
 
-// ─── Supabase Configuration ──────────────────────────────────────────────────
 const supabaseUrl = 'https://prrtyicplljeyqpuhnpf.supabase.co';
-// REEMPLAZA ESTO por la clave "anon" / "public" de tu panel de Supabase:
 const supabaseAnonKey = 'sb_publishable__CfchfHgr_hvXH5uuzWrIw_bdADyLxU'; 
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const TYPE_STYLES: Record<string, { color: string; bg: string; label: string }> = {
+interface TypeStyleConfig {
+  color: string;
+  bg: string;
+  label: string;
+}
+
+const TYPE_STYLES: Record<string, TypeStyleConfig> = {
   class:    { color: Colors.info,                    bg: Colors.infoLight,      label: 'Class' },
   exam:     { color: Colors.primaryRed,              bg: Colors.primaryRedLight, label: 'Exam' },
   deadline: { color: Colors.warning,                 bg: Colors.warningLight,   label: 'Deadline' },
   event:    { color: Colors.categoryColors.events,   bg: Colors.categoryBg.events, label: 'Event' },
   google:   { color: '#4285F4',                      bg: '#E8F0FE',             label: 'Google Sync' },
+  upf:      { color: '#003B46',                      bg: '#E6F0F2',             label: 'UPF Sync' },
 };
 
 const DAYS_SHORT  = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const MONTHS      = [
+const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
@@ -60,12 +71,15 @@ const MONTHS      = [
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function toDateStr(d: Date) {
-  return d.toISOString().split('T')[0];
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function getWeekDays(base: Date): Date[] {
   const dow = base.getDay();
-  const monday = new Date(base);
+  const monday = new Date(base.getFullYear(), base.getMonth(), base.getDate());
   monday.setDate(base.getDate() - (dow === 0 ? 6 : dow - 1));
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(monday);
@@ -80,13 +94,76 @@ function getDaysInMonth(year: number, month: number): Date[] {
   const startDow = first.getDay();
   const padStart = startDow === 0 ? 6 : startDow - 1;
   const cells: (Date | null)[] = Array(padStart).fill(null);
-  for (let d = 1; d <= last.getDate(); d++) cells.push(new Date(year, month, d));
+  for (let d = 1; d <= last.getDate(); d++) {
+    cells.push(new Date(year, month, d));
+  }
   while (cells.length % 7 !== 0) cells.push(null);
   return cells as Date[];
 }
 
 function genId() {
   return 'u' + Math.random().toString(36).slice(2, 9);
+}
+
+function parseICSString(text: string): CalendarEvent[] {
+  const events: CalendarEvent[] = [];
+  const cleanText = text.replace(/\r/g, '');
+  const vevents = cleanText.split('BEGIN:VEVENT');
+  
+  for (let i = 1; i < vevents.length; i++) {
+    const block = vevents[i];
+    
+    const summaryMatch  = block.match(/SUMMARY:(.*)/);
+    const dtstartMatch  = block.match(/DTSTART[;:].*?([0-9]{8}T[0-9]{6})/);
+    const dtendMatch    = block.match(/DTEND[;:].*?([0-9]{8}T[0-9]{6})/);
+    const locationMatch = block.match(/LOCATION:(.*)/);
+
+    if (summaryMatch && dtstartMatch) {
+      const rawStart = dtstartMatch[1];
+      
+      const year = rawStart.substring(0, 4);
+      const month = rawStart.substring(4, 6);
+      const day = rawStart.substring(6, 8);
+      const eventDate = `${year}-${month}-${day}`;
+
+      let eventTime = '00:00';
+      if (rawStart.includes('T')) {
+        const hour = rawStart.substring(9, 11);
+        const min = rawStart.substring(11, 13);
+        eventTime = `${hour}:${min}`;
+      }
+
+      let eventEndTime: string | undefined = undefined;
+      if (dtendMatch) {
+        const rawEnd = dtendMatch[1];
+        if (rawEnd.includes('T')) {
+          const endHour = rawEnd.substring(9, 11);
+          const endMin = rawEnd.substring(11, 13);
+          eventEndTime = `${endHour}:${endMin}`;
+        }
+      }
+
+      let title = summaryMatch[1].replace(/\\,/g, ',').trim();
+      if (title.includes('|')) {
+        title = title.split('|')[0].trim();
+      }
+
+      const isExam = summaryMatch[1].toLowerCase().includes('exam') || title.toLowerCase().includes('exam');
+      const eventType = isExam ? 'exam' : 'class';
+
+      events.push({
+        id: 'upf-' + Math.random().toString(36).slice(2, 9),
+        title: title,
+        date: eventDate,
+        time: eventTime,
+        endTime: eventEndTime,
+        location: locationMatch ? locationMatch[1].replace(/\\,/g, ',').trim() : undefined,
+        type: eventType,
+        subject: 'UPF'
+      });
+    }
+  }
+  return events;
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -144,14 +221,52 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
   const [location, setLocation] = useState('');
   const [subject, setSubject]   = useState('');
   const [type, setType]         = useState<EventType>('class');
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const reset = () => {
     setTitle(''); setDate(defaultDate); setTime('10:00');
     setEndTime(''); setLocation(''); setSubject(''); setType('class');
+    setErrorMsg(null);
+  };
+
+  const isValidTimeFormat = (timeStr: string) => {
+    const regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return regex.test(timeStr.trim());
   };
 
   const handleAdd = () => {
     if (!title.trim() || !date.trim() || !time.trim()) return;
+    setErrorMsg(null);
+
+    if (!isValidTimeFormat(time)) {
+      const msg = "Start time is unrealistic (use HH:MM format from 00:00 to 23:59)";
+      setErrorMsg(msg);
+      Alert.alert("Invalid Schedule", msg);
+      return;
+    }
+
+    if (endTime.trim().length > 0) {
+      if (!isValidTimeFormat(endTime)) {
+        const msg = "End time is unrealistic (use HH:MM format from 00:00 to 23:59)";
+        setErrorMsg(msg);
+        Alert.alert("Invalid Schedule", msg);
+        return;
+      }
+
+      const [startHours, startMinutes] = time.split(':').map(Number);
+      const [endHours, endMinutes] = endTime.split(':').map(Number);
+
+      const startTotalMinutes = startHours * 60 + startMinutes;
+      const endTotalMinutes = endHours * 60 + endMinutes;
+
+      if (endTotalMinutes <= startTotalMinutes) {
+        const msg = "End time cannot be earlier than or equal to start time.";
+        setErrorMsg(msg);
+        Alert.alert("Unrealistic Hours", msg);
+        return;
+      }
+    }
+
     onAdd({
       id: genId(),
       title: title.trim(),
@@ -167,6 +282,8 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
   };
 
   const handleClose = () => { reset(); onClose(); };
+
+  const allowedKeys: EventType[] = ['class', 'exam', 'deadline', 'event'];
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
@@ -185,24 +302,27 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <Text style={styles.fieldLabel}>Type</Text>
             <View style={styles.typeRow}>
-              {(Object.entries(TYPE_STYLES).filter(([k]) => k !== 'google') as [EventType, typeof TYPE_STYLES[string]][]).map(([key, val]) => (
-                <TouchableOpacity
-                  key={key}
-                  style={[
-                    styles.typeChip,
-                    { borderColor: val.color },
-                    type === key && { backgroundColor: val.color },
-                  ]}
-                  onPress={() => setType(key)}
-                >
-                  <Text style={[
-                    styles.typeChipText,
-                    { color: type === key ? '#fff' : val.color },
-                  ]}>
-                    {val.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+              {allowedKeys.map((key) => {
+                const val = TYPE_STYLES[key];
+                return (
+                  <TouchableOpacity
+                    key={key}
+                    style={[
+                      styles.typeChip,
+                      { borderColor: val.color },
+                      type === key && { backgroundColor: val.color },
+                    ]}
+                    onPress={() => setType(key)}
+                  >
+                    <Text style={[
+                      styles.typeChipText,
+                      { color: type === key ? '#fff' : val.color },
+                    ]}>
+                      {val.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             <Text style={styles.fieldLabel}>Title *</Text>
@@ -216,18 +336,19 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
 
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>Start time *</Text>
-                <TextInput style={styles.input} placeholder="10:00" placeholderTextColor={Colors.textTertiary} value={time} onChangeText={setTime} keyboardType="numeric" />
+                <Text style={styles.fieldLabel}>Start time * (HH:MM)</Text>
+                <TextInput style={[styles.input, errorMsg ? styles.inputError : null]} placeholder="10:00" placeholderTextColor={Colors.textTertiary} value={time} onChangeText={setTime} />
               </View>
               <View style={{ width: 12 }} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.fieldLabel}>End time</Text>
-                <TextInput style={styles.input} placeholder="12:00" placeholderTextColor={Colors.textTertiary} value={endTime} onChangeText={setEndTime} keyboardType="numeric" />
+                <Text style={styles.fieldLabel}>End time (HH:MM)</Text>
+                <TextInput style={[styles.input, errorMsg ? styles.inputError : null]} placeholder="12:00" placeholderTextColor={Colors.textTertiary} value={endTime} onChangeText={setEndTime} />
               </View>
             </View>
 
-            <Text style={styles.fieldLabel}>Location</Text>
-            <TextInput style={styles.input} placeholder="e.g. Room 52.S31" placeholderTextColor={Colors.textTertiary} value={location} onChangeText={setLocation} />
+            {errorMsg && (
+              <Text style={styles.errorTextAlert}>{errorMsg}</Text>
+            )}
 
             <TouchableOpacity
               style={[styles.addBtn, (!title.trim() || !date.trim() || !time.trim()) && styles.addBtnDisabled]}
@@ -253,19 +374,24 @@ type ViewMode = 'monthly' | 'daily';
 export default function CalendarScreen() {
   const router = useRouter();
 
-  // Fecha actual dinámica
   const today = new Date();
   const [viewMode, setViewMode]       = useState<ViewMode>('monthly');
   const [selectedDate, setSelectedDate] = useState(today);
   const [weekBase, setWeekBase]       = useState(today);
   const [monthBase, setMonthBase]     = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [events, setEvents]           = useState<CalendarEvent[]>(MOCK_CALENDAR);
+  const { events, setEvents }         = useEvents();
   const [showModal, setShowModal]     = useState(false);
+  
   const [syncing, setSyncing]         = useState(false);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
+  
+  const [syncingUPF, setSyncingUPF]   = useState(false);
+  const [isUPFConnected, setIsUPFConnected] = useState(false);
+  const [showUPFGuide, setShowUPFGuide]     = useState(false); 
 
   useEffect(() => {
     checkExistingGoogleSession();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkExistingGoogleSession = async () => {
@@ -335,18 +461,66 @@ export default function CalendarScreen() {
               time: eventTime,
               endTime: eventEndTime,
               location: gEvent.location || undefined,
-              type: 'google',
+              type: 'class',
               subject: 'Google Account'
             };
           });
 
         setEvents((prev) => {
-          const localEvents = prev.filter((e) => (e.type as string) !== 'google');
+          const localEvents = prev.filter((e) => e.subject !== 'Google Account');
           return [...localEvents, ...mappedGoogleEvents];
         });
       }
     } catch (err) {
       console.error("Error fetching Google items:", err);
+    }
+  };
+
+  const handlePickICSFile = async () => {
+    setShowUPFGuide(false);
+    setSyncingUPF(true);
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['text/calendar', 'application/ics'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) {
+        setSyncingUPF(false);
+        return;
+      }
+
+      const pickedFile = result.assets[0];
+      let fileContent = '';
+
+      if (Platform.OS === 'web') {
+        const response = await fetch(pickedFile.uri);
+        fileContent = await response.text();
+      } else {
+        fileContent = await FileSystem.readAsStringAsync(pickedFile.uri);
+      }
+
+      const upfEvents = parseICSString(fileContent);
+
+      if (upfEvents.length === 0) {
+        Alert.alert("Aviso", "No se encontraron clases válidas. Asegúrate de que el archivo exportado sea el de la Secretaría Virtual de la UPF.");
+        setSyncingUPF(false);
+        return;
+      }
+
+      setEvents((prev) => {
+        const filtered = prev.filter((e) => e.subject !== 'UPF');
+        return [...filtered, ...upfEvents];
+      });
+
+      setIsUPFConnected(true);
+      Alert.alert("¡Éxito!", `Se han sincronizado ${upfEvents.length} eventos de tu horario de la UPF.`);
+
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error de importación", "Hubo un problema al leer tu archivo .ics.");
+    } finally {
+      setSyncingUPF(false);
     }
   };
 
@@ -406,20 +580,20 @@ export default function CalendarScreen() {
           return (
             <TouchableOpacity
               key={str}
-              style={[styles.monthCell, isSelected && styles.monthCellSelected]}
+              style={[styles.monthCell, isSelected ? styles.monthCellSelected : null]}
               onPress={() => selectDay(cell)}
             >
               <Text style={[
                 styles.monthCellNum,
-                isSelected && styles.monthCellNumSelected,
-                isToday && !isSelected && styles.monthCellNumToday,
+                isSelected ? styles.monthCellNumSelected : null,
+                isToday && !isSelected ? styles.monthCellNumToday : null,
               ]}>
                 {cell.getDate()}
               </Text>
               {hasEvents && (
                 <View style={styles.dotRow}>
                   {Array.from({ length: Math.min(eventCount, 3) }).map((_, di) => (
-                    <View key={di} style={[styles.eventDot, isSelected && styles.eventDotSelected]} />
+                    <View key={di} style={[styles.eventDot, isSelected ? styles.eventDotSelected : null]} />
                   ))}
                 </View>
               )}
@@ -452,21 +626,21 @@ export default function CalendarScreen() {
             return (
               <TouchableOpacity
                 key={i}
-                style={[styles.dayCell, isSelected && styles.dayCellSelected]}
+                style={[styles.dayCell, isSelected ? styles.dayCellSelected : null]}
                 onPress={() => setSelectedDate(d)}
               >
-                <Text style={[styles.dayLabel, isSelected && styles.dayLabelSelected]}>
+                <Text style={[styles.dayLabel, isSelected ? styles.dayLabelSelected : null]}>
                   {DAYS_SHORT[i]}
                 </Text>
                 <Text style={[
                   styles.dayNum,
-                  isSelected && styles.dayNumSelected,
-                  isToday && !isSelected && styles.dayNumToday,
+                  isSelected ? styles.dayNumSelected : null,
+                  isToday && !isSelected ? styles.dayNumToday : null,
                 ]}>
                   {d.getDate()}
                 </Text>
                 {hasEvents && (
-                  <View style={[styles.eventDot, isSelected && styles.eventDotSelected]} />
+                  <View style={[styles.eventDot, isSelected ? styles.eventDotSelected : null]} />
                 )}
               </TouchableOpacity>
             );
@@ -505,9 +679,9 @@ export default function CalendarScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Botón de Sincronización Google */}
+        {/* Botón Google */}
         <TouchableOpacity 
-          style={[styles.googleSyncBtn, isGoogleConnected && styles.googleSyncBtnConnected]} 
+          style={[styles.googleSyncBtn, isGoogleConnected ? styles.googleSyncBtnConnected : null]} 
           onPress={handleConnectGoogle}
           disabled={syncing}
         >
@@ -520,15 +694,30 @@ export default function CalendarScreen() {
           )}
         </TouchableOpacity>
 
-        {/* View toggle */}
+        {/* Botón UPF */}
+        <TouchableOpacity 
+          style={[styles.upfSyncBtn, isUPFConnected ? styles.upfSyncBtnConnected : null]} 
+          onPress={() => setShowUPFGuide(true)}
+          disabled={syncingUPF}
+        >
+          {syncingUPF ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.upfSyncBtnText}>
+              {isUPFConnected ? '✓ UPF Calendar Connected' : 'Sync UPF Secretaría Virtual'}
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Toggles */}
         <View style={styles.toggleRow}>
-          <TouchableOpacity style={[styles.toggleBtn, viewMode === 'daily' && styles.toggleBtnActive]} onPress={() => setViewMode('daily')}>
+          <TouchableOpacity style={[styles.toggleBtn, viewMode === 'daily' ? styles.toggleBtnActive : null]} onPress={() => setViewMode('daily')}>
             <Calendar size={15} color={viewMode === 'daily' ? '#fff' : Colors.textSecondary} />
-            <Text style={[styles.toggleBtnText, viewMode === 'daily' && styles.toggleBtnTextActive]}>Daily</Text>
+            <Text style={[styles.toggleBtnText, viewMode === 'daily' ? styles.toggleBtnTextActive : null]}>Daily</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.toggleBtn, viewMode === 'monthly' && styles.toggleBtnActive]} onPress={() => setViewMode('monthly')}>
+          <TouchableOpacity style={[styles.toggleBtn, viewMode === 'monthly' ? styles.toggleBtnActive : null]} onPress={() => setViewMode('monthly')}>
             <LayoutGrid size={15} color={viewMode === 'monthly' ? '#fff' : Colors.textSecondary} />
-            <Text style={[styles.toggleBtnText, viewMode === 'monthly' && styles.toggleBtnTextActive]}>Monthly</Text>
+            <Text style={[styles.toggleBtnText, viewMode === 'monthly' ? styles.toggleBtnTextActive : null]}>Monthly</Text>
           </TouchableOpacity>
         </View>
 
@@ -553,17 +742,92 @@ export default function CalendarScreen() {
         <View style={styles.legendCard}>
           <Text style={styles.legendTitle}>Legend</Text>
           <View style={styles.legendRow}>
-            {Object.entries(TYPE_STYLES).map(([key, val]) => (
-              <View key={key} style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: val.color }]} />
-                <Text style={styles.legendText}>{val.label}</Text>
-              </View>
-            ))}
+            {Object.keys(TYPE_STYLES).map((key) => {
+              const val = TYPE_STYLES[key];
+              return (
+                <View key={key} style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: val.color }]} />
+                  <Text style={styles.legendText}>{val.label}</Text>
+                </View>
+              );
+            })}
           </View>
         </View>
 
         <View style={{ height: 24 }} />
       </ScrollView>
+
+      {/* ── MODAL INTERACTIVO: GUÍA DE LA EXTENSIÓN UPF ── */}
+      <Modal
+        visible={showUPFGuide}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowUPFGuide(false)}
+      >
+        <View style={styles.guideOverlay}>
+          <View style={styles.guideSheet}>
+            <View style={styles.guideHeader}>
+              <Text style={styles.guideTitle}>Paso 1: Descargar la extensión y generar el archivo</Text>
+              <TouchableOpacity onPress={() => setShowUPFGuide(false)} style={styles.guideCloseBtn}>
+                <X size={20} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+              
+              {/* Paso 1 */}
+              <View style={styles.stepBlock}>
+                <View style={styles.stepIndicator}>
+                  <Chrome size={16} color="#003B46" />
+                  <Text style={styles.stepIndicatorText}>1</Text>
+                </View>
+                <Text style={styles.stepBodyText}>
+                  Entra a la <Text style={styles.boldText}>Chrome Web Store</Text> y busca <Text style={styles.boldText}>&quot;Exportador de horario y calendario UPF&quot;</Text>. Instálala en tu navegador.
+                </Text>
+              </View>
+
+              {/* Paso 2 */}
+              <View style={styles.stepBlock}>
+                <View style={styles.stepIndicator}>
+                  <KeyRound size={16} color="#003B46" />
+                  <Text style={styles.stepIndicatorText}>2</Text>
+                </View>
+                <Text style={styles.stepBodyText}>
+                  Inicia sesión en el <Text style={styles.boldText}>Campus Global de la UPF</Text> y dirígete a la <Text style={styles.boldText}>Secretaría Virtual</Text>.
+                </Text>
+              </View>
+
+              {/* Paso 3 */}
+              <View style={styles.stepBlock}>
+                <View style={styles.stepIndicator}>
+                  <CalendarDays size={16} color="#003B46" />
+                  <Text style={styles.stepIndicatorText}>3</Text>
+                </View>
+                <Text style={styles.stepBodyText}>
+                  Abre tu sección de <Text style={styles.boldText}>Calendario de clases / Horario</Text>.
+                </Text>
+              </View>
+
+              {/* Paso 4 */}
+              <View style={styles.stepBlock}>
+                <View style={styles.stepIndicator}>
+                  <FileDown size={16} color="#003B46" />
+                  <Text style={styles.stepIndicatorText}>4</Text>
+                </View>
+                <Text style={styles.stepBodyText}>
+                  Haz clic en el icono de la extensión. Selecciona el rango de fechas, presiona <Text style={styles.boldText}>Detectar materias</Text> y haz clic en <Text style={styles.boldText}>Exportar .ics</Text>.
+                </Text>
+              </View>
+
+              {/* Botón para subir el archivo */}
+              <TouchableOpacity style={styles.guideActionBtn} onPress={handlePickICSFile}>
+                <FileDown size={18} color="#fff" />
+                <Text style={styles.guideActionBtnText}>Subir archivo .ics descargado</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       <TouchableOpacity style={styles.fab} onPress={() => setShowModal(true)}>
         <Plus size={24} color="#fff" />
@@ -577,8 +841,13 @@ export default function CalendarScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  content:   { paddingBottom: 100 },
+  container: { 
+    flex: 1, 
+    backgroundColor: Colors.background 
+  },
+  content: { 
+    paddingBottom: 100 
+  },
   header: {
     backgroundColor: Colors.primaryRed,
     paddingTop: 56,
@@ -588,9 +857,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  addHeaderBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
+  backBtn: { 
+    width: 36, 
+    height: 36, 
+    borderRadius: 18, 
+    backgroundColor: 'rgba(255,255,255,0.2)', 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  addHeaderBtn: { 
+    width: 36, 
+    height: 36, 
+    borderRadius: 18, 
+    backgroundColor: 'rgba(255,255,255,0.2)', 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  headerTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: '#fff' 
+  },
+  
   googleSyncBtn: {
     backgroundColor: '#4285F4',
     marginHorizontal: 20,
@@ -609,69 +897,462 @@ const styles = StyleSheet.create({
     backgroundColor: '#2E7D32',
     shadowColor: '#2E7D32',
   },
-  googleSyncBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
-  toggleRow: { flexDirection: 'row', marginHorizontal: 20, marginTop: 16, marginBottom: 4, backgroundColor: Colors.card, borderRadius: 14, padding: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
-  toggleBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 9, borderRadius: 11 },
-  toggleBtnActive:     { backgroundColor: Colors.primaryRed },
-  toggleBtnText:       { fontSize: 13, fontWeight: '600', color: Colors.textSecondary },
-  toggleBtnTextActive: { color: '#fff' },
-  calendarCard: { backgroundColor: Colors.card, margin: 20, borderRadius: 18, padding: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 },
-  weekNav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  navBtn:    { padding: 6 },
-  monthLabel: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary },
-  weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  dayCell: { alignItems: 'center', flex: 1, paddingVertical: 8, borderRadius: 12, gap: 4 },
-  dayCellSelected: { backgroundColor: Colors.primaryRed },
-  dayLabel:         { fontSize: 11, fontWeight: '600', color: Colors.textTertiary, textTransform: 'uppercase' },
-  dayLabelSelected: { color: 'rgba(255,255,255,0.75)' },
-  dayNum:           { fontSize: 16, fontWeight: '700', color: Colors.textPrimary },
-  dayNumSelected:   { color: '#fff' },
-  dayNumToday:      { color: Colors.primaryRed },
-  dayHeaderCell: { flex: 1, alignItems: 'center', paddingBottom: 8 },
-  dayHeaderText: { fontSize: 11, fontWeight: '600', color: Colors.textTertiary, textTransform: 'uppercase' },
-  monthGrid:     { flexDirection: 'row', flexWrap: 'wrap' },
-  monthCell: { width: `${100 / 7}%`, aspectRatio: 0.9, alignItems: 'center', justifyContent: 'center', borderRadius: 10, gap: 3, marginVertical: 2 },
-  monthCellSelected:      { backgroundColor: Colors.primaryRed },
-  monthCellNum:           { fontSize: 14, fontWeight: '600', color: Colors.textPrimary },
-  monthCellNumSelected:   { color: '#fff' },
-  monthCellNumToday:      { color: Colors.primaryRed },
-  dotRow:                 { flexDirection: 'row', gap: 2 },
-  eventDot:         { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.primaryRed },
-  eventDotSelected: { backgroundColor: 'rgba(255,255,255,0.8)' },
-  section:      { paddingHorizontal: 20, marginBottom: 20 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: Colors.textPrimary, marginBottom: 12 },
-  eventItem: { flexDirection: 'row', backgroundColor: Colors.card, borderRadius: 14, overflow: 'hidden', marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 1 },
-  eventStripe:  { width: 4 },
-  eventContent: { flex: 1, padding: 12 },
-  eventTopRow:  { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  typePill:     { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  typePillText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.4 },
-  subject:      { fontSize: 11, color: Colors.textTertiary, flex: 1 },
-  eventTitle:   { fontSize: 14, fontWeight: '600', color: Colors.textPrimary, marginBottom: 6 },
-  eventMeta:    { gap: 3 },
-  metaItem:     { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  metaText:     { fontSize: 12, color: Colors.textSecondary },
-  emptyDay:  { backgroundColor: Colors.card, borderRadius: 14, padding: 20, alignItems: 'center' },
-  emptyText: { color: Colors.textTertiary, fontSize: 14 },
-  legendCard:  { backgroundColor: Colors.card, marginHorizontal: 20, borderRadius: 14, padding: 16 },
-  legendTitle: { fontSize: 12, fontWeight: '700', color: Colors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
-  legendRow:  { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendDot:  { width: 10, height: 10, borderRadius: 5 },
-  legendText: { fontSize: 13, color: Colors.textSecondary },
-  fab: { position: 'absolute', bottom: 28, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.primaryRed, alignItems: 'center', justifyContent: 'center', shadowColor: Colors.primaryRed, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8 },
-  modalOverlay: { flex: 1, backgroundColor: Colors.overlay, justifyContent: 'flex-end' },
-  modalSheet: { backgroundColor: Colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, maxHeight: '90%' },
-  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
-  modalTitle:    { fontSize: 18, fontWeight: '700', color: Colors.textPrimary },
-  modalCloseBtn: { padding: 4 },
-  fieldLabel: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 6, marginTop: 14 },
-  input: { backgroundColor: Colors.background, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: Colors.textPrimary, borderWidth: 1, borderColor: Colors.cardBorder },
-  typeRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  typeChip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1.5 },
-  typeChipText: { fontSize: 13, fontWeight: '600' },
-  row: { flexDirection: 'row' },
-  addBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: Colors.primaryRed, borderRadius: 14, paddingVertical: 15, marginTop: 24 },
-  addBtnDisabled: { opacity: 0.5 },
-  addBtnText:     { fontSize: 15, fontWeight: '700', color: '#fff' },
+  googleSyncBtnText: { 
+    color: '#fff', 
+    fontWeight: '700', 
+    fontSize: 14 
+  },
+  
+  upfSyncBtn: {
+    backgroundColor: '#003B46',
+    marginHorizontal: 20,
+    marginTop: 10,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  upfSyncBtnConnected: {
+    backgroundColor: '#2E7D32',
+  },
+  upfSyncBtnText: { 
+    color: '#fff', 
+    fontWeight: '700', 
+    fontSize: 14 
+  },
+  guideOverlay: { 
+    flex: 1, 
+    backgroundColor: Colors.overlay, 
+    justifyContent: 'flex-end' 
+  },
+  guideSheet: { 
+    backgroundColor: Colors.card, 
+    borderTopLeftRadius: 24, 
+    borderTopRightRadius: 24, 
+    padding: 24, 
+    maxHeight: '85%' 
+  },
+  guideHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    marginBottom: 20 
+  },
+  guideTitle: { 
+    fontSize: 16, 
+    fontWeight: '700', 
+    color: '#003B46', 
+    flex: 1, 
+    marginRight: 10, 
+    lineHeight: 22 
+  },
+  guideCloseBtn: { 
+    padding: 4, 
+    backgroundColor: Colors.background, 
+    borderRadius: 16 
+  },
+  stepBlock: { 
+    flexDirection: 'row', 
+    gap: 12, 
+    marginBottom: 18, 
+    alignItems: 'flex-start' 
+  },
+  stepIndicator: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#E6F0F2', 
+    paddingHorizontal: 8, 
+    paddingVertical: 4, 
+    borderRadius: 8, 
+    gap: 4, 
+    marginTop: 2 
+  },
+  stepIndicatorText: { 
+    fontSize: 12, 
+    fontWeight: '700', 
+    color: '#003B46' 
+  },
+  stepBodyText: { 
+    fontSize: 13.5, 
+    color: Colors.textSecondary, 
+    flex: 1, 
+    lineHeight: 19 
+  },
+  boldText: { 
+    fontWeight: '700', 
+    color: Colors.textPrimary 
+  },
+  guideActionBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 8, 
+    backgroundColor: '#003B46', 
+    borderRadius: 14, 
+    paddingVertical: 15, 
+    marginTop: 15 
+  },
+  guideActionBtnText: { 
+    fontSize: 15, 
+    fontWeight: '700', 
+    color: '#fff' 
+  },
+
+  toggleRow: { 
+    flexDirection: 'row', 
+    marginHorizontal: 20, 
+    marginTop: 16, 
+    marginBottom: 4, 
+    backgroundColor: Colors.card, 
+    borderRadius: 14, 
+    padding: 4, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.06, 
+    shadowRadius: 6, 
+    elevation: 2 
+  },
+  toggleBtn: { 
+    flex: 1, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 6, 
+    paddingVertical: 9, 
+    borderRadius: 11 
+  },
+  toggleBtnActive: { 
+    backgroundColor: Colors.primaryRed 
+  },
+  toggleBtnText: { 
+    fontSize: 13, 
+    fontWeight: '600', 
+    color: Colors.textSecondary 
+  },
+  toggleBtnTextActive: { 
+    color: '#fff' 
+  },
+  calendarCard: { 
+    backgroundColor: Colors.card, 
+    margin: 20, 
+    borderRadius: 18, 
+    padding: 16, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.07, 
+    shadowRadius: 8, 
+    elevation: 3 
+  },
+  weekNav: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    marginBottom: 16 
+  },
+  navBtn: { 
+    padding: 6 
+  },
+  monthLabel: { 
+    fontSize: 15, 
+    fontWeight: '700', 
+    color: Colors.textPrimary 
+  },
+  weekRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between' 
+  },
+  dayCell: { 
+    alignItems: 'center', 
+    flex: 1, 
+    paddingVertical: 8, 
+    borderRadius: 12, 
+    gap: 4 
+  },
+  dayCellSelected: { 
+    backgroundColor: Colors.primaryRed 
+  },
+  dayLabel: { 
+    fontSize: 11, 
+    fontWeight: '600', 
+    color: Colors.textTertiary, 
+    textTransform: 'uppercase' 
+  },
+  dayLabelSelected: { 
+    color: 'rgba(255,255,255,0.75)' 
+  },
+  dayNum: { 
+    fontSize: 16, 
+    fontWeight: '700', 
+    color: Colors.textPrimary 
+  },
+  dayNumSelected: { 
+    color: '#fff' 
+  },
+  dayNumToday: { 
+    color: Colors.primaryRed 
+  },
+  dayHeaderCell: { 
+    flex: 1, 
+    alignItems: 'center', 
+    paddingBottom: 8 
+  },
+  dayHeaderText: { 
+    fontSize: 11, 
+    fontWeight: '600', 
+    color: Colors.textTertiary, 
+    textTransform: 'uppercase' 
+  },
+  monthGrid: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap' 
+  },
+  monthCell: { 
+    width: `${100 / 7}%`, 
+    aspectRatio: 0.9, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderRadius: 10, 
+    gap: 3, 
+    marginVertical: 2 
+  },
+  monthCellSelected: { 
+    backgroundColor: Colors.primaryRed 
+  },
+  monthCellNum: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: Colors.textPrimary 
+  },
+  monthCellNumSelected: { 
+    color: '#fff' 
+  },
+  monthCellNumToday: { 
+    color: Colors.primaryRed 
+  },
+  dotRow: { 
+    flexDirection: 'row', 
+    gap: 2 
+  },
+  eventDot: { 
+    width: 4, 
+    height: 4, 
+    borderRadius: 2, 
+    backgroundColor: Colors.primaryRed 
+  },
+  eventDotSelected: { 
+    backgroundColor: 'rgba(255,255,255,0.8)' 
+  },
+  section: { 
+    paddingHorizontal: 20, 
+    marginBottom: 20 
+  },
+  sectionTitle: { 
+    fontSize: 15, 
+    fontWeight: '700', 
+    color: Colors.textPrimary, 
+    marginBottom: 12 
+  },
+  eventItem: { 
+    flexDirection: 'row', 
+    backgroundColor: Colors.card, 
+    borderRadius: 14, 
+    overflow: 'hidden', 
+    marginBottom: 10, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.05, 
+    shadowRadius: 6, 
+    elevation: 1 
+  },
+  eventStripe: { 
+    width: 4 
+  },
+  eventContent: { 
+    flex: 1, 
+    padding: 12 
+  },
+  eventTopRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8, 
+    marginBottom: 4 
+  },
+  typePill: { 
+    paddingHorizontal: 8, 
+    paddingVertical: 2, 
+    borderRadius: 10 
+  },
+  typePillText: { 
+    fontSize: 10, 
+    fontWeight: '700', 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.4 
+  },
+  subject: { 
+    fontSize: 11, 
+    color: Colors.textTertiary, 
+    flex: 1 
+  },
+  eventTitle: { 
+    fontSize: 14, 
+    fontWeight: '600', 
+    color: Colors.textPrimary, 
+    marginBottom: 6 
+  },
+  eventMeta: { 
+    gap: 3 
+  },
+  metaItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 5 
+  },
+  metaText: { 
+    fontSize: 12, 
+    color: Colors.textSecondary 
+  },
+  emptyDay: { 
+    backgroundColor: Colors.card, 
+    borderRadius: 14, 
+    padding: 20, 
+    alignItems: 'center' 
+  },
+  emptyText: { 
+    color: Colors.textTertiary, 
+    fontSize: 14 
+  },
+  legendCard: { 
+    backgroundColor: Colors.card, 
+    marginHorizontal: 20, 
+    borderRadius: 14, 
+    padding: 16 
+  },
+  legendTitle: { 
+    fontSize: 12, 
+    fontWeight: '700', 
+    color: Colors.textTertiary, 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.5, 
+    marginBottom: 12 
+  },
+  legendRow: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    gap: 12 
+  },
+  legendItem: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 6 
+  },
+  legendDot: { 
+    width: 10, height: 10, borderRadius: 5 
+  },
+  legendText: { 
+    fontSize: 13, 
+    color: Colors.textSecondary 
+  },
+  fab: { 
+    position: 'absolute', 
+    bottom: 28, 
+    right: 24, 
+    width: 56, 
+    height: 56, 
+    borderRadius: 28, 
+    backgroundColor: Colors.primaryRed, 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  modalOverlay: { 
+    flex: 1, 
+    backgroundColor: Colors.overlay, 
+    justifyContent: 'flex-end' 
+  },
+  modalSheet: { 
+    backgroundColor: Colors.card, 
+    borderTopLeftRadius: 24, 
+    borderTopRightRadius: 24, 
+    padding: 20, 
+    maxHeight: '90%' 
+  },
+  modalHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    marginBottom: 20 
+  },
+  modalTitle: { 
+    fontSize: 18, 
+    fontWeight: '700', 
+    color: Colors.textPrimary 
+  },
+  modalCloseBtn: { 
+    padding: 4 
+  },
+  fieldLabel: { 
+    fontSize: 12, 
+    fontWeight: '600', 
+    color: Colors.textSecondary, 
+    textTransform: 'uppercase', 
+    letterSpacing: 0.4, 
+    marginBottom: 6, 
+    marginTop: 14 
+  },
+  input: { 
+    backgroundColor: Colors.background, 
+    borderRadius: 12, 
+    paddingHorizontal: 14, 
+    paddingVertical: 12, 
+    fontSize: 15, 
+    color: Colors.textPrimary, 
+    borderWidth: 1, 
+    borderColor: Colors.cardBorder 
+  },
+  inputError: { 
+    borderColor: Colors.primaryRed, 
+    borderWidth: 1.5 
+  },
+  errorTextAlert: { 
+    color: Colors.primaryRed, 
+    fontSize: 13, 
+    fontWeight: '600', 
+    marginTop: 8, 
+    textAlign: 'center' 
+  },
+  typeRow: { 
+    flexDirection: 'row', 
+    gap: 8, 
+    flexWrap: 'wrap' 
+  },
+  typeChip: { 
+    paddingHorizontal: 14, 
+    paddingVertical: 7, 
+    borderRadius: 20, 
+    borderWidth: 1.5 
+  },
+  typeChipText: { 
+    fontSize: 13, 
+    fontWeight: '600' 
+  },
+  row: { 
+    flexDirection: 'row' 
+  },
+  addBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 8, 
+    backgroundColor: Colors.primaryRed, 
+    borderRadius: 14, 
+    paddingVertical: 15, 
+    marginTop: 24 
+  },
+  addBtnDisabled: { 
+    opacity: 0.5 
+  },
+  addBtnText: { 
+    fontSize: 15, 
+    fontWeight: '700', 
+    color: '#fff' 
+  },
 });

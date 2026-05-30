@@ -29,6 +29,7 @@ import {
 
 import * as ImagePicker from 'expo-image-picker';
 
+
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -157,53 +158,54 @@ export default function ProfileScreen() {
 
       {/* ─── HERO PROFILE CON DOBLE AVATAR (Merge Features) ─── */}
       <View style={styles.profileHero}>
-        
-        {/* Contenedor Flex para alinear las dos fotos */}
-        <View style={styles.avatarsRow}>
-          
-          {/* 1. CÍRCULO: FOTO DE PERFIL REAL */}
-          <TouchableOpacity style={styles.avatarWrapper} onPress={handlePickImage} activeOpacity={0.85}>
-            {student?.photoUrl ? (
-              <Image source={{ uri: student.photoUrl }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, { backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }]}>
-                <Text style={{ fontSize: 32, color: '#fff', fontWeight: 'bold' }}>
-                  {student?.firstName?.[0]?.toUpperCase() || 'U'}
-                </Text>
-              </View>
-            )}
-            <View style={[styles.iconBadge, { backgroundColor: colors.primaryRed }]}>
-              <Camera size={14} color="#fff" />
-            </View>
-            <View style={styles.roleBadge}>
-              <Text style={styles.roleBadgeText}>{student?.role || 'STUDENT'}</Text>
-            </View>
-          </TouchableOpacity>
+        {/* ─── CONTENEDOR UNIFICADO: HERO PROFILE CON DOS AVATARES ─── */}
+<View style={styles.avatarsRow}>
+  
+  {/* 1. CÍRCULO: FOTO DE PERFIL REAL (Con diseño mejorado de Main) */}
+  <TouchableOpacity style={styles.avatarWrapper} onPress={handlePickImage} activeOpacity={0.85}>
+    {student?.photoUrl ? (
+      <Image source={{ uri: student.photoUrl }} style={styles.avatar} />
+    ) : (
+      <View style={[styles.avatar, { backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }]}>
+        <Text style={{ fontSize: 36, color: '#fff', fontWeight: 'bold' }}>
+          {student?.firstName?.[0]?.toUpperCase() || 'U'}
+        </Text>
+      </View>
+    )}
+    {/* Insignia de cámara con la posición fija exacta de Main */}
+    <View style={{ position: 'absolute', bottom: -5, left: 10, backgroundColor: colors.primaryRed, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.background, zIndex: 10 }}>
+      <Camera size={14} color="#fff" />
+    </View>
+    <View style={styles.roleBadge}>
+      <Text style={styles.roleBadgeText}>{student?.role || 'STUDENT'}</Text>
+    </View>
+  </TouchableOpacity>
 
-          {/* 2. CÍRCULO: AVATAR 3D INTERACTIVO */}
-          <TouchableOpacity 
-            style={styles.avatarWrapper} 
-            onPress={() => router.push('/avatar')} // Redirige a tu nueva pantalla
-            activeOpacity={0.85}
-          >
-            <View style={[styles.avatar, styles.miniCanvas]}>
-              <Image source={getBaseImage()} style={styles.miniLayer} resizeMode="contain" />
-              {avatarAccessory !== 'none' && getAccessoryImage() && (
-                <Image source={getAccessoryImage()} style={styles.miniLayer} resizeMode="contain" />
-              )}
-              {avatarPin !== 'none' && getPinImage() && (
-                <Image source={getPinImage()} style={styles.miniLayer} resizeMode="contain" />
-              )}
-            </View>
-            <View style={[styles.iconBadge, { backgroundColor: '#000' }]}>
-              <Sparkles size={14} color="#fff" />
-            </View>
-            <View style={[styles.roleBadge, { backgroundColor: '#000' }]}>
-              <Text style={styles.roleBadgeText}>STUDIO 3D</Text>
-            </View>
-          </TouchableOpacity>
+  {/* 2. CÍRCULO: AVATAR 3D INTERACTIVO (Tu Feature Branch adaptada al inglés) */}
+  <TouchableOpacity 
+    style={styles.avatarWrapper} 
+    onPress={() => router.push('/avatar')} 
+    activeOpacity={0.85}
+  >
+    <View style={[styles.avatar, styles.miniCanvas]}>
+      <Image source={getBaseImage()} style={styles.miniLayer} resizeMode="contain" />
+      {selectedAccessory !== 'none' && getAccessoryImage() && (
+        <Image source={getAccessoryImage()} style={styles.miniLayer} resizeMode="contain" />
+      )}
+      {selectedPin !== 'none' && getPinImage() && (
+        <Image source={getPinImage()} style={styles.miniLayer} resizeMode="contain" />
+      )}
+    </View>
+    {/* Insignia de chispas en posición absoluta simétrica a la de Main */}
+    <View style={{ position: 'absolute', bottom: -5, left: 10, backgroundColor: '#000', width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.background, zIndex: 10 }}>
+      <Sparkles size={14} color="#fff" />
+    </View>
+    <View style={[styles.roleBadge, { backgroundColor: '#000' }]}>
+      <Text style={styles.roleBadgeText}>STUDIO 3D</Text>
+    </View>
+  </TouchableOpacity>
 
-        </View>
+</View>
 
         <Text style={styles.fullName}>{student?.fullName || 'User'}</Text>
         <Text style={styles.username}>ID: {student?.studentIdNumber || 'N/A'}</Text>

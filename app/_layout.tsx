@@ -1,11 +1,29 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { EventProvider } from '@/context/EventContext';
+import { useEffect } from 'react';
 
 function AppStack() {
   const { isDark } = useTheme();
+  const { isAuthenticated, isLoading, student } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (isAuthenticated && student) {
+      const needsOnboarding = !student.faculty || (!student.degree && student.role === 'STUDENT');
+      
+      if (needsOnboarding && segments[0] !== 'onboarding') {
+        router.replace('/onboarding' as any);
+      }
+    }
+  }, [isAuthenticated, student, segments, isLoading, router]);
+
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
@@ -18,6 +36,7 @@ function AppStack() {
         <Stack.Screen name="events" options={{ presentation: 'card' }} />
         <Stack.Screen name="event/[id]" options={{ presentation: 'card' }} />
         <Stack.Screen name="chatbot" options={{ presentation: 'card' }} />
+        <Stack.Screen name="onboarding" options={{ presentation: 'card', gestureEnabled: false }} />
         <Stack.Screen name="menu" options={{ presentation: 'modal' }} />
         <Stack.Screen name="+not-found" />
         <Stack.Screen name="avatar" options={{ presentation: 'modal' }} />
@@ -33,7 +52,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <AppStack />
+        <EventProvider>
+          <AppStack />
+        </EventProvider>
       </AuthProvider>
     </ThemeProvider>
   );
