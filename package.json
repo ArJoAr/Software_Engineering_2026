@@ -11,6 +11,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "@emnapi/core": "^1.10.0",
+    "@emnapi/runtime": "^1.10.0",
     "@expo/vector-icons": "^15.0.2",
     "@google/generative-ai": "^0.24.1",
     "@lucide/lab": "^0.1.2",
