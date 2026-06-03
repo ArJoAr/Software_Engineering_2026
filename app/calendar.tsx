@@ -60,6 +60,7 @@ const TYPE_STYLES: Record<string, TypeStyleConfig> = {
   event:    { color: Colors.categoryColors.events,   bg: Colors.categoryBg.events, label: 'Event' },
   google:   { color: '#4285F4',                      bg: '#E8F0FE',             label: 'Google Sync' },
   upf:      { color: '#003B46',                      bg: '#E6F0F2',             label: 'UPF Sync' },
+  study:    { color: Colors.success,                 bg: '#E8F5E9',             label: 'Study Plan' },
 };
 
 const DAYS_SHORT  = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

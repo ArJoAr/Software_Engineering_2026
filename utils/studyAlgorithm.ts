@@ -122,7 +122,7 @@ export function generateStudyPlan(events: CalendarEvent[], config: StudyConfig):
         if (hoursNeeded <= 0) break;
         if (slot.type === 'free') {
           slot.type = 'study';
-          slot.title = `Study: ${task.subject || task.title}`;
+          slot.title = `Study: ${task.title}`;
           slot.taskId = task.id;
           slot.isExam = task.type === 'exam';
           hoursNeeded -= 1;

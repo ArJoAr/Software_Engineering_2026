@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Check, Clock } from 'lucide-react-native';
@@ -20,7 +21,7 @@ export default function StudyPlanScreen() {
   const { config: configStr } = useLocalSearchParams<{ config: string }>();
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
-  const { events } = useEvents();
+  const { events, setEvents } = useEvents();
 
   const [plan, setPlan] = useState<DayPlan[]>([]);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
@@ -105,9 +106,37 @@ export default function StudyPlanScreen() {
   };
 
   const savePlan = () => {
-    Alert.alert("Success", "Study plan saved to your calendar!", [
-      { text: "OK", onPress: () => router.push('/todo') }
-    ]);
+    // Convert study slots into real CalendarEvents and save them
+    const newEvents: import('@/types').CalendarEvent[] = [];
+    plan.forEach(day => {
+      day.slots.forEach(slot => {
+        if (slot.type === 'study') {
+          newEvents.push({
+            id: `study-${slot.id}-${Date.now()}`,
+            title: slot.title || 'Study Session',
+            date: day.date,
+            time: slot.startTime,
+            endTime: slot.endTime,
+            type: 'study', // Save as study so it's clear in the calendar
+            subject: 'AI Planner',
+          });
+        }
+      });
+    });
+
+    if (newEvents.length > 0) {
+      setEvents(prev => [...prev, ...newEvents]);
+    }
+
+    if (Platform.OS === 'web') {
+      // Web native alert doesn't block properly with callbacks in some Expo versions
+      window.alert("Study plan saved to your calendar!");
+      router.push('/calendar');
+    } else {
+      Alert.alert("Success", "Study plan saved to your calendar!", [
+        { text: "OK", onPress: () => router.push('/calendar') }
+      ]);
+    }
   };
 
   const getSlotStyle = (slot: TimeSlot) => {
