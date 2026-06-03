@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -36,6 +36,7 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
+import { useTheme } from '@/context/ThemeContext';
 import { MOCK_CALENDAR } from '@/constants/mockData';
 import type { CalendarEvent } from '@/types';
 import { useEvents } from '@/context/EventContext';
@@ -170,7 +171,8 @@ function parseICSString(text: string): CalendarEvent[] {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function EventItem({ event }: { event: CalendarEvent }) {
+function EventItem({ event, colors }: { event: CalendarEvent; colors: typeof Colors }) {
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const cfg = TYPE_STYLES[event.type] ?? TYPE_STYLES.event;
   return (
     <View style={styles.eventItem}>
@@ -192,14 +194,14 @@ function EventItem({ event }: { event: CalendarEvent }) {
         <Text style={styles.eventTitle}>{event.title}</Text>
         <View style={styles.eventMeta}>
           <View style={styles.metaItem}>
-            <Clock size={11} color={Colors.textTertiary} />
+            <Clock size={11} color={colors.textTertiary} />
             <Text style={styles.metaText}>
               {event.time}{event.endTime ? ` – ${event.endTime}` : ''}
             </Text>
           </View>
           {event.location && (
             <View style={styles.metaItem}>
-              <MapPin size={11} color={Colors.textTertiary} />
+              <MapPin size={11} color={colors.textTertiary} />
               <Text style={styles.metaText}>{event.location}</Text>
             </View>
           )}
@@ -218,9 +220,11 @@ interface AddEventModalProps {
   defaultDate: string;
   onClose: () => void;
   onAdd: (event: CalendarEvent) => void;
+  colors: typeof Colors;
 }
 
-function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalProps) {
+function AddEventModal({ visible, defaultDate, onClose, onAdd, colors }: AddEventModalProps) {
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [title, setTitle]       = useState('');
   const [date, setDate]         = useState(defaultDate);
   const [time, setTime]         = useState('10:00');
@@ -302,7 +306,7 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>New Event</Text>
             <TouchableOpacity onPress={handleClose} style={styles.modalCloseBtn}>
-              <X size={20} color={Colors.textSecondary} />
+              <X size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -333,23 +337,23 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd }: AddEventModalPr
             </View>
 
             <Text style={styles.fieldLabel}>Title *</Text>
-            <TextInput style={styles.input} placeholder="e.g. Media Theory" placeholderTextColor={Colors.textTertiary} value={title} onChangeText={setTitle} />
+            <TextInput style={styles.input} placeholder="e.g. Media Theory" placeholderTextColor={colors.textTertiary} value={title} onChangeText={setTitle} />
 
             <Text style={styles.fieldLabel}>Subject</Text>
-            <TextInput style={styles.input} placeholder="e.g. Cultural Studies" placeholderTextColor={Colors.textTertiary} value={subject} onChangeText={setSubject} />
+            <TextInput style={styles.input} placeholder="e.g. Cultural Studies" placeholderTextColor={colors.textTertiary} value={subject} onChangeText={setSubject} />
 
             <Text style={styles.fieldLabel}>Date * (YYYY-MM-DD)</Text>
-            <TextInput style={styles.input} placeholder="2026-05-19" placeholderTextColor={Colors.textTertiary} value={date} onChangeText={setDate} keyboardType="numeric" />
+            <TextInput style={styles.input} placeholder="2026-05-19" placeholderTextColor={colors.textTertiary} value={date} onChangeText={setDate} keyboardType="numeric" />
 
             <View style={styles.row}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.fieldLabel}>Start time * (HH:MM)</Text>
-                <TextInput style={[styles.input, errorMsg ? styles.inputError : null]} placeholder="10:00" placeholderTextColor={Colors.textTertiary} value={time} onChangeText={setTime} />
+                <TextInput style={[styles.input, errorMsg ? styles.inputError : null]} placeholder="10:00" placeholderTextColor={colors.textTertiary} value={time} onChangeText={setTime} />
               </View>
               <View style={{ width: 12 }} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.fieldLabel}>End time (HH:MM)</Text>
-                <TextInput style={[styles.input, errorMsg ? styles.inputError : null]} placeholder="12:00" placeholderTextColor={Colors.textTertiary} value={endTime} onChangeText={setEndTime} />
+                <TextInput style={[styles.input, errorMsg ? styles.inputError : null]} placeholder="12:00" placeholderTextColor={colors.textTertiary} value={endTime} onChangeText={setEndTime} />
               </View>
             </View>
 
@@ -380,6 +384,8 @@ type ViewMode = 'monthly' | 'daily';
 
 export default function CalendarScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const today = new Date();
   const [viewMode, setViewMode]       = useState<ViewMode>('monthly');
@@ -560,11 +566,11 @@ export default function CalendarScreen() {
     <View style={styles.calendarCard}>
       <View style={styles.weekNav}>
         <TouchableOpacity onPress={prevMonth} style={styles.navBtn}>
-          <ChevronLeft size={20} color={Colors.textSecondary} />
+          <ChevronLeft size={20} color={colors.textSecondary} />
         </TouchableOpacity>
         <Text style={styles.monthLabel}>{monthLabel}</Text>
         <TouchableOpacity onPress={nextMonth} style={styles.navBtn}>
-          <ChevronRight size={20} color={Colors.textSecondary} />
+          <ChevronRight size={20} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -617,11 +623,11 @@ export default function CalendarScreen() {
       <View style={styles.calendarCard}>
         <View style={styles.weekNav}>
           <TouchableOpacity onPress={prevWeek} style={styles.navBtn}>
-            <ChevronLeft size={20} color={Colors.textSecondary} />
+            <ChevronLeft size={20} color={colors.textSecondary} />
           </TouchableOpacity>
           <Text style={styles.monthLabel}>{weekLabel}</Text>
           <TouchableOpacity onPress={nextWeek} style={styles.navBtn}>
-            <ChevronRight size={20} color={Colors.textSecondary} />
+            <ChevronRight size={20} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
         <View style={styles.weekRow}>
@@ -666,7 +672,7 @@ export default function CalendarScreen() {
             <Text style={styles.emptyText}>No scheduled events for this day.</Text>
           </View>
         ) : (
-          dayEvents.map((e) => <EventItem key={e.id} event={e} />)
+          dayEvents.map((e) => <EventItem key={e.id} event={e} colors={colors} />)
         )}
       </View>
     </>
@@ -724,11 +730,11 @@ export default function CalendarScreen() {
         {/* Toggles */}
         <View style={styles.toggleRow}>
           <TouchableOpacity style={[styles.toggleBtn, viewMode === 'daily' ? styles.toggleBtnActive : null]} onPress={() => setViewMode('daily')}>
-            <Calendar size={15} color={viewMode === 'daily' ? '#fff' : Colors.textSecondary} />
+            <Calendar size={15} color={viewMode === 'daily' ? '#fff' : colors.textSecondary} />
             <Text style={[styles.toggleBtnText, viewMode === 'daily' ? styles.toggleBtnTextActive : null]}>Daily</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.toggleBtn, viewMode === 'monthly' ? styles.toggleBtnActive : null]} onPress={() => setViewMode('monthly')}>
-            <LayoutGrid size={15} color={viewMode === 'monthly' ? '#fff' : Colors.textSecondary} />
+            <LayoutGrid size={15} color={viewMode === 'monthly' ? '#fff' : colors.textSecondary} />
             <Text style={[styles.toggleBtnText, viewMode === 'monthly' ? styles.toggleBtnTextActive : null]}>Monthly</Text>
           </TouchableOpacity>
         </View>
@@ -745,7 +751,7 @@ export default function CalendarScreen() {
                 <Text style={styles.emptyText}>No scheduled events for this day.</Text>
               </View>
             ) : (
-              dayEvents.map((e) => <EventItem key={e.id} event={e} />)
+              dayEvents.map((e) => <EventItem key={e.id} event={e} colors={colors} />)
             )}
           </View>
         )}
@@ -781,7 +787,7 @@ export default function CalendarScreen() {
             <View style={styles.guideHeader}>
               <Text style={styles.guideTitle}>Paso 1: Descargar la extensión y generar el archivo</Text>
               <TouchableOpacity onPress={() => setShowUPFGuide(false)} style={styles.guideCloseBtn}>
-                <X size={20} color={Colors.textSecondary} />
+                <X size={20} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -845,23 +851,23 @@ export default function CalendarScreen() {
         <Plus size={24} color="#fff" />
       </TouchableOpacity>
 
-      <AddEventModal visible={showModal} defaultDate={selectedStr} onClose={() => setShowModal(false)} onAdd={handleAddEvent} />
+      <AddEventModal visible={showModal} defaultDate={selectedStr} onClose={() => setShowModal(false)} onAdd={handleAddEvent} colors={colors} />
     </>
   );
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: Colors.background 
+    backgroundColor: colors.background 
   },
   content: { 
     paddingBottom: 100 
   },
   header: {
-    backgroundColor: Colors.primaryRed,
+    backgroundColor: colors.primaryRed,
     paddingTop: 56,
     paddingBottom: 20,
     paddingHorizontal: 20,
@@ -934,11 +940,11 @@ const styles = StyleSheet.create({
   },
   guideOverlay: { 
     flex: 1, 
-    backgroundColor: Colors.overlay, 
+    backgroundColor: colors.overlay, 
     justifyContent: 'flex-end' 
   },
   guideSheet: { 
-    backgroundColor: Colors.card, 
+    backgroundColor: colors.card, 
     borderTopLeftRadius: 24, 
     borderTopRightRadius: 24, 
     padding: 24, 
@@ -960,7 +966,7 @@ const styles = StyleSheet.create({
   },
   guideCloseBtn: { 
     padding: 4, 
-    backgroundColor: Colors.background, 
+    backgroundColor: colors.background, 
     borderRadius: 16 
   },
   stepBlock: { 
@@ -986,13 +992,13 @@ const styles = StyleSheet.create({
   },
   stepBodyText: { 
     fontSize: 13.5, 
-    color: Colors.textSecondary, 
+    color: colors.textSecondary, 
     flex: 1, 
     lineHeight: 19 
   },
   boldText: { 
     fontWeight: '700', 
-    color: Colors.textPrimary 
+    color: colors.textPrimary 
   },
   guideActionBtn: { 
     flexDirection: 'row', 
@@ -1015,7 +1021,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20, 
     marginTop: 16, 
     marginBottom: 4, 
-    backgroundColor: Colors.card, 
+    backgroundColor: colors.card, 
     borderRadius: 14, 
     padding: 4, 
     shadowColor: '#000', 
@@ -1034,18 +1040,18 @@ const styles = StyleSheet.create({
     borderRadius: 11 
   },
   toggleBtnActive: { 
-    backgroundColor: Colors.primaryRed 
+    backgroundColor: colors.primaryRed 
   },
   toggleBtnText: { 
     fontSize: 13, 
     fontWeight: '600', 
-    color: Colors.textSecondary 
+    color: colors.textSecondary 
   },
   toggleBtnTextActive: { 
     color: '#fff' 
   },
   calendarCard: { 
-    backgroundColor: Colors.card, 
+    backgroundColor: colors.card, 
     margin: 20, 
     borderRadius: 18, 
     padding: 16, 
@@ -1067,7 +1073,7 @@ const styles = StyleSheet.create({
   monthLabel: { 
     fontSize: 15, 
     fontWeight: '700', 
-    color: Colors.textPrimary 
+    color: colors.textPrimary 
   },
   weekRow: { 
     flexDirection: 'row', 
@@ -1081,12 +1087,12 @@ const styles = StyleSheet.create({
     gap: 4 
   },
   dayCellSelected: { 
-    backgroundColor: Colors.primaryRed 
+    backgroundColor: colors.primaryRed 
   },
   dayLabel: { 
     fontSize: 11, 
     fontWeight: '600', 
-    color: Colors.textTertiary, 
+    color: colors.textTertiary, 
     textTransform: 'uppercase' 
   },
   dayLabelSelected: { 
@@ -1095,13 +1101,13 @@ const styles = StyleSheet.create({
   dayNum: { 
     fontSize: 16, 
     fontWeight: '700', 
-    color: Colors.textPrimary 
+    color: colors.textPrimary 
   },
   dayNumSelected: { 
     color: '#fff' 
   },
   dayNumToday: { 
-    color: Colors.primaryRed 
+    color: colors.primaryRed 
   },
   dayHeaderCell: { 
     flex: 1, 
@@ -1111,7 +1117,7 @@ const styles = StyleSheet.create({
   dayHeaderText: { 
     fontSize: 11, 
     fontWeight: '600', 
-    color: Colors.textTertiary, 
+    color: colors.textTertiary, 
     textTransform: 'uppercase' 
   },
   monthGrid: { 
@@ -1128,18 +1134,18 @@ const styles = StyleSheet.create({
     marginVertical: 2 
   },
   monthCellSelected: { 
-    backgroundColor: Colors.primaryRed 
+    backgroundColor: colors.primaryRed 
   },
   monthCellNum: { 
     fontSize: 14, 
     fontWeight: '600', 
-    color: Colors.textPrimary 
+    color: colors.textPrimary 
   },
   monthCellNumSelected: { 
     color: '#fff' 
   },
   monthCellNumToday: { 
-    color: Colors.primaryRed 
+    color: colors.primaryRed 
   },
   dotRow: { 
     flexDirection: 'row', 
@@ -1149,7 +1155,7 @@ const styles = StyleSheet.create({
     width: 4, 
     height: 4, 
     borderRadius: 2, 
-    backgroundColor: Colors.primaryRed 
+    backgroundColor: colors.primaryRed 
   },
   eventDotSelected: { 
     backgroundColor: 'rgba(255,255,255,0.8)' 
@@ -1161,12 +1167,12 @@ const styles = StyleSheet.create({
   sectionTitle: { 
     fontSize: 15, 
     fontWeight: '700', 
-    color: Colors.textPrimary, 
+    color: colors.textPrimary, 
     marginBottom: 12 
   },
   eventItem: { 
     flexDirection: 'row', 
-    backgroundColor: Colors.card, 
+    backgroundColor: colors.card, 
     borderRadius: 14, 
     overflow: 'hidden', 
     marginBottom: 10, 
@@ -1202,13 +1208,13 @@ const styles = StyleSheet.create({
   },
   subject: { 
     fontSize: 11, 
-    color: Colors.textTertiary, 
+    color: colors.textTertiary, 
     flex: 1 
   },
   eventTitle: { 
     fontSize: 14, 
     fontWeight: '600', 
-    color: Colors.textPrimary, 
+    color: colors.textPrimary, 
     marginBottom: 6 
   },
   eventMeta: { 
@@ -1221,20 +1227,20 @@ const styles = StyleSheet.create({
   },
   metaText: { 
     fontSize: 12, 
-    color: Colors.textSecondary 
+    color: colors.textSecondary 
   },
   emptyDay: { 
-    backgroundColor: Colors.card, 
+    backgroundColor: colors.card, 
     borderRadius: 14, 
     padding: 20, 
     alignItems: 'center' 
   },
   emptyText: { 
-    color: Colors.textTertiary, 
+    color: colors.textTertiary, 
     fontSize: 14 
   },
   legendCard: { 
-    backgroundColor: Colors.card, 
+    backgroundColor: colors.card, 
     marginHorizontal: 20, 
     borderRadius: 14, 
     padding: 16 
@@ -1242,7 +1248,7 @@ const styles = StyleSheet.create({
   legendTitle: { 
     fontSize: 12, 
     fontWeight: '700', 
-    color: Colors.textTertiary, 
+    color: colors.textTertiary, 
     textTransform: 'uppercase', 
     letterSpacing: 0.5, 
     marginBottom: 12 
@@ -1262,7 +1268,7 @@ const styles = StyleSheet.create({
   },
   legendText: { 
     fontSize: 13, 
-    color: Colors.textSecondary 
+    color: colors.textSecondary 
   },
   fab: { 
     position: 'absolute', 
@@ -1271,17 +1277,17 @@ const styles = StyleSheet.create({
     width: 56, 
     height: 56, 
     borderRadius: 28, 
-    backgroundColor: Colors.primaryRed, 
+    backgroundColor: colors.primaryRed, 
     alignItems: 'center', 
     justifyContent: 'center' 
   },
   modalOverlay: { 
     flex: 1, 
-    backgroundColor: Colors.overlay, 
+    backgroundColor: colors.overlay, 
     justifyContent: 'flex-end' 
   },
   modalSheet: { 
-    backgroundColor: Colors.card, 
+    backgroundColor: colors.card, 
     borderTopLeftRadius: 24, 
     borderTopRightRadius: 24, 
     padding: 20, 
@@ -1296,7 +1302,7 @@ const styles = StyleSheet.create({
   modalTitle: { 
     fontSize: 18, 
     fontWeight: '700', 
-    color: Colors.textPrimary 
+    color: colors.textPrimary 
   },
   modalCloseBtn: { 
     padding: 4 
@@ -1304,28 +1310,28 @@ const styles = StyleSheet.create({
   fieldLabel: { 
     fontSize: 12, 
     fontWeight: '600', 
-    color: Colors.textSecondary, 
+    color: colors.textSecondary, 
     textTransform: 'uppercase', 
     letterSpacing: 0.4, 
     marginBottom: 6, 
     marginTop: 14 
   },
   input: { 
-    backgroundColor: Colors.background, 
+    backgroundColor: colors.background, 
     borderRadius: 12, 
     paddingHorizontal: 14, 
     paddingVertical: 12, 
     fontSize: 15, 
-    color: Colors.textPrimary, 
+    color: colors.textPrimary, 
     borderWidth: 1, 
-    borderColor: Colors.cardBorder 
+    borderColor: colors.cardBorder 
   },
   inputError: { 
-    borderColor: Colors.primaryRed, 
+    borderColor: colors.primaryRed, 
     borderWidth: 1.5 
   },
   errorTextAlert: { 
-    color: Colors.primaryRed, 
+    color: colors.primaryRed, 
     fontSize: 13, 
     fontWeight: '600', 
     marginTop: 8, 
@@ -1354,7 +1360,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', 
     justifyContent: 'center', 
     gap: 8, 
-    backgroundColor: Colors.primaryRed, 
+    backgroundColor: colors.primaryRed, 
     borderRadius: 14, 
     paddingVertical: 15, 
     marginTop: 24 
