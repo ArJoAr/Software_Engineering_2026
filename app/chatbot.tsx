@@ -135,7 +135,7 @@ export default function ChatbotScreen() {
             // Other binary/doc types: we don't extract in-app currently
             content = `[File: ${name}]`;
           }
-        } catch (readError) {
+        } catch {
           content = `[Unable to read file: ${name}]`;
         }
 

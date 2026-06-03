@@ -32,6 +32,8 @@ import {
   KeyRound,
   CalendarDays,
   FileDown,
+  Home,
+  Trash2,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { MOCK_CALENDAR } from '@/constants/mockData';
@@ -178,9 +180,14 @@ function EventItem({ event }: { event: CalendarEvent }) {
           <View style={[styles.typePill, { backgroundColor: cfg.bg }]}>
             <Text style={[styles.typePillText, { color: cfg.color }]}>{cfg.label}</Text>
           </View>
-          {event.subject && (
-            <Text style={styles.subject} numberOfLines={1}>{event.subject}</Text>
-          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            {event.subject && (
+              <Text style={styles.subject} numberOfLines={1}>{event.subject}</Text>
+            )}
+            <TouchableOpacity onPress={() => onDelete(event.id)}>
+              <Trash2 size={16} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
         </View>
         <Text style={styles.eventTitle}>{event.title}</Text>
         <View style={styles.eventMeta}>
@@ -674,9 +681,14 @@ export default function CalendarScreen() {
             <ArrowLeft size={20} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>My Calendar</Text>
-          <TouchableOpacity style={styles.addHeaderBtn} onPress={() => setShowModal(true)}>
-            <Plus size={20} color="#fff" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => router.replace('/(tabs)')}>
+              <Home size={20} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.addHeaderBtn} onPress={() => setShowModal(true)}>
+              <Plus size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Botón Google */}

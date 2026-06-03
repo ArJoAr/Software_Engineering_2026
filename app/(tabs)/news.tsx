@@ -62,17 +62,25 @@ export default function NewsScreen() {
         <Text style={styles.headerSub}>Latest from UPF</Text>
       </View>
 
-      <View style={styles.featuredSection}>
-        <Text style={styles.sectionLabel}>Featured</Text>
-        <NewsCard item={MOCK_NEWS[0]} colors={colors} />
-      </View>
+      {MOCK_NEWS.length > 0 ? (
+        <>
+          <View style={styles.featuredSection}>
+            <Text style={styles.sectionLabel}>Featured</Text>
+            <NewsCard item={MOCK_NEWS[0]} colors={colors} />
+          </View>
 
-      <View style={styles.listSection}>
-        <Text style={styles.sectionLabel}>Recent News</Text>
-        {MOCK_NEWS.slice(1).map((item) => (
-          <NewsCard key={item.id} item={item} colors={colors} />
-        ))}
-      </View>
+          <View style={styles.listSection}>
+            <Text style={styles.sectionLabel}>Recent News</Text>
+            {MOCK_NEWS.slice(1).map((item) => (
+              <NewsCard key={item.id} item={item} colors={colors} />
+            ))}
+          </View>
+        </>
+      ) : (
+        <View style={{ padding: 40, alignItems: 'center' }}>
+          <Text style={{ color: colors.textSecondary }}>No news available at the moment.</Text>
+        </View>
+      )}
 
       <View style={styles.footer}>
         <TouchableOpacity style={styles.loadMore}>

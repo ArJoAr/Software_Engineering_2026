@@ -69,6 +69,15 @@ export default function TodoScreen() {
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         
+        <TouchableOpacity 
+          style={styles.planButton}
+          activeOpacity={0.8}
+          onPress={() => router.push('/study-config')}
+        >
+          <Calendar size={20} color="#fff" />
+          <Text style={styles.planButtonText}>Create AI Study Plan</Text>
+        </TouchableOpacity>
+
         <Text style={styles.sectionTitle}>Upcoming Tasks ({upcomingTasks.length})</Text>
         {upcomingTasks.length === 0 ? (
           <Text style={styles.emptyText}>No upcoming homeworks or exams! 🎉</Text>
@@ -138,4 +147,19 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   },
   badgeText: { fontSize: 10, fontWeight: 'bold' },
   divider: { height: 1, backgroundColor: colors.separator, marginVertical: 24 },
+  planButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primaryRed,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginBottom: 20,
+    gap: 8,
+  },
+  planButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
