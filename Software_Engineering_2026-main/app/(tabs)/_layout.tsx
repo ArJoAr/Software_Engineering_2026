@@ -1,30 +1,17 @@
 import { Tabs } from 'expo-router';
 import { Hop as Home, Newspaper, Star, BookOpen, Bell } from 'lucide-react-native';
-import { useTheme } from '@/context/ThemeContext';
+import { Colors } from '@/constants/colors';
+import { View, StyleSheet } from 'react-native';
 
 export default function TabLayout() {
-  const { colors } = useTheme();
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primaryRed,
-        tabBarInactiveTintColor: colors.textTertiary,
-        tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopWidth: 1,
-          borderTopColor: colors.separator,
-          height: 80,
-          paddingBottom: 20,
-          paddingTop: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.06,
-          shadowRadius: 8,
-          elevation: 8,
-        },
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+        tabBarActiveTintColor: Colors.primaryRed,
+        tabBarInactiveTintColor: Colors.textTertiary,
+        tabBarStyle: styles.tabBar,
+        tabBarLabelStyle: styles.tabLabel,
       }}
     >
       <Tabs.Screen
@@ -61,9 +48,33 @@ export default function TabLayout() {
           title: 'Alerts',
           tabBarIcon: ({ color, size }) => <Bell size={size} color={color} />,
           tabBarBadge: 2,
-          tabBarBadgeStyle: { backgroundColor: colors.primaryRed, fontSize: 10 },
+          tabBarBadgeStyle: styles.badge,
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBar: {
+    backgroundColor: Colors.card,
+    borderTopWidth: 1,
+    borderTopColor: Colors.separator,
+    height: 80,
+    paddingBottom: 20,
+    paddingTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  tabLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  badge: {
+    backgroundColor: Colors.primaryRed,
+    fontSize: 10,
+  },
+});

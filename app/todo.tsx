@@ -34,9 +34,9 @@ export default function TodoScreen() {
     >
       <View style={styles.checkboxContainer}>
         {task.completed ? (
-          <CheckCircle2 size={24} color={colors.success} />
+          <CheckCircle2 size={24} color={Colors.success} />
         ) : (
-          <Circle size={24} color={colors.textTertiary} />
+          <Circle size={24} color={Colors.textTertiary} />
         )}
       </View>
       <View style={styles.taskInfo}>
@@ -44,13 +44,13 @@ export default function TodoScreen() {
           {task.title}
         </Text>
         <View style={styles.taskMeta}>
-          <Calendar size={12} color={task.completed ? colors.textTertiary : colors.textSecondary} />
+          <Calendar size={12} color={task.completed ? Colors.textTertiary : Colors.textSecondary} />
           <Text style={[styles.taskDate, task.completed && styles.taskDateCompleted]}>
             {task.date} {task.time ? `at ${task.time}` : ''}
           </Text>
         </View>
-        <View style={[styles.badge, { backgroundColor: task.type === 'exam' ? colors.primaryRedLight : colors.warningLight }]}>
-           <Text style={[styles.badgeText, { color: task.type === 'exam' ? colors.primaryRed : colors.warning }]}>
+        <View style={[styles.badge, { backgroundColor: task.type === 'exam' ? Colors.primaryRedLight : Colors.warningLight }]}>
+           <Text style={[styles.badgeText, { color: task.type === 'exam' ? Colors.primaryRed : Colors.warning }]}>
              {task.type === 'exam' ? 'Exam' : 'Homework'}
            </Text>
         </View>

@@ -7,7 +7,6 @@ import {
   TextInput,
   StyleSheet,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -131,32 +130,7 @@ export default function ChatbotScreen() {
           if (mime === 'text/plain' || name.endsWith('.txt')) {
             content = await FileSystem.readAsStringAsync(file.uri);
           } else if (mime.includes('pdf') || name.toLowerCase().endsWith('.pdf')) {
-            // Try to extract text from PDF on web using pdfjs-dist.
-            try {
-              if (Platform.OS === 'web') {
-                const res = await fetch(file.uri);
-                const arrayBuffer = await res.arrayBuffer();
-                const pdfjs = await import('pdfjs-dist/legacy/build/pdf');
-                const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-                let text = '';
-                for (let i = 1; i <= pdf.numPages; i++) {
-                  // eslint-disable-next-line no-await-in-loop
-                  const page = await pdf.getPage(i);
-                  // eslint-disable-next-line no-await-in-loop
-                  const contentItems = await page.getTextContent();
-                  const pageText = contentItems.items.map((it: any) => (it.str ? it.str : '')).join(' ');
-                  text += pageText + '\n\n';
-                }
-                content = text || `[File: ${name}]`;
-              } else {
-                // On native, reading and parsing PDFs in-app is non-trivial.
-                // Fallback: attach placeholder and let server-side/text-provided context be used.
-                content = `[PDF attached: ${name}]. (Text extraction not available on device.)`;
-              }
-            } catch (pdfErr) {
-              console.warn('PDF parse failed:', pdfErr);
-              content = `[File: ${name}]`;
-            }
+            content = `[PDF attached: ${name}]`;
           } else {
             // Other binary/doc types: we don't extract in-app currently
             content = `[File: ${name}]`;
