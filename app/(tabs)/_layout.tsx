@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Hop as Home, Newspaper, Star, BookOpen, Bell } from 'lucide-react-native';
+import { House as Home, Newspaper, Star, BookOpen, Bell } from 'lucide-react-native';
 import { useTheme } from '@/context/ThemeContext';
 
 export default function TabLayout() {
