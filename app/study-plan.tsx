@@ -25,6 +25,7 @@ export default function StudyPlanScreen() {
 
   const [plan, setPlan] = useState<DayPlan[]>([]);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
     if (configStr && events.length > 0) {
@@ -126,15 +127,16 @@ export default function StudyPlanScreen() {
 
     if (newEvents.length > 0) {
       setEvents(prev => [...prev, ...newEvents]);
+      setIsSaved(true);
     }
 
     if (Platform.OS === 'web') {
       // Web native alert doesn't block properly with callbacks in some Expo versions
       window.alert("Study plan saved to your calendar!");
-      router.push('/calendar');
+      router.replace('/calendar');
     } else {
       Alert.alert("Success", "Study plan saved to your calendar!", [
-        { text: "OK", onPress: () => router.push('/calendar') }
+        { text: "OK", onPress: () => router.replace('/calendar') }
       ]);
     }
   };
@@ -163,9 +165,13 @@ export default function StudyPlanScreen() {
           <ArrowLeft size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Your Study Calendar</Text>
-        <TouchableOpacity style={styles.saveBtn} onPress={savePlan}>
-          <Check size={24} color="#fff" />
-        </TouchableOpacity>
+        {!isSaved ? (
+          <TouchableOpacity style={styles.saveBtn} onPress={savePlan}>
+            <Check size={24} color="#fff" />
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 32 }} />
+        )}
       </View>
 
       <View style={styles.subheader}>

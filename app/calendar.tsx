@@ -32,6 +32,8 @@ import {
   KeyRound,
   CalendarDays,
   FileDown,
+  Home,
+  Trash2,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { MOCK_CALENDAR } from '@/constants/mockData';
@@ -169,7 +171,7 @@ function parseICSString(text: string): CalendarEvent[] {
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-function EventItem({ event }: { event: CalendarEvent }) {
+function EventItem({ event, onDelete }: { event: CalendarEvent; onDelete: (id: string) => void }) {
   const cfg = TYPE_STYLES[event.type] ?? TYPE_STYLES.event;
   return (
     <View style={styles.eventItem}>
@@ -179,9 +181,14 @@ function EventItem({ event }: { event: CalendarEvent }) {
           <View style={[styles.typePill, { backgroundColor: cfg.bg }]}>
             <Text style={[styles.typePillText, { color: cfg.color }]}>{cfg.label}</Text>
           </View>
-          {event.subject && (
-            <Text style={styles.subject} numberOfLines={1}>{event.subject}</Text>
-          )}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            {event.subject && (
+              <Text style={styles.subject} numberOfLines={1}>{event.subject}</Text>
+            )}
+            <TouchableOpacity onPress={() => onDelete(event.id)}>
+              <Trash2 size={16} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
         </View>
         <Text style={styles.eventTitle}>{event.title}</Text>
         <View style={styles.eventMeta}>
@@ -535,6 +542,18 @@ export default function CalendarScreen() {
   // ── Handlers ────────────────────────────────────────────────────────────
   const handleAddEvent = (ev: CalendarEvent) => setEvents((prev) => [...prev, ev]);
 
+  const handleDeleteEvent = (id: string) => {
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm("Are you sure you want to remove this event?");
+      if (confirmed) setEvents(prev => prev.filter(e => e.id !== id));
+    } else {
+      Alert.alert("Delete Event", "Are you sure you want to remove this event?", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => setEvents(prev => prev.filter(e => e.id !== id)) }
+      ]);
+    }
+  };
+
   const selectDay = (d: Date) => {
     setSelectedDate(d);
     setWeekBase(d);
@@ -660,7 +679,7 @@ export default function CalendarScreen() {
             <Text style={styles.emptyText}>No scheduled events for this day.</Text>
           </View>
         ) : (
-          dayEvents.map((e) => <EventItem key={e.id} event={e} />)
+          dayEvents.map((e) => <EventItem key={e.id} event={e} onDelete={handleDeleteEvent} />)
         )}
       </View>
     </>
@@ -675,9 +694,14 @@ export default function CalendarScreen() {
             <ArrowLeft size={20} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>My Calendar</Text>
-          <TouchableOpacity style={styles.addHeaderBtn} onPress={() => setShowModal(true)}>
-            <Plus size={20} color="#fff" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => router.replace('/(tabs)')}>
+              <Home size={20} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.addHeaderBtn} onPress={() => setShowModal(true)}>
+              <Plus size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Botón Google */}
@@ -734,7 +758,7 @@ export default function CalendarScreen() {
                 <Text style={styles.emptyText}>No scheduled events for this day.</Text>
               </View>
             ) : (
-              dayEvents.map((e) => <EventItem key={e.id} event={e} />)
+              dayEvents.map((e) => <EventItem key={e.id} event={e} onDelete={handleDeleteEvent} />)
             )}
           </View>
         )}

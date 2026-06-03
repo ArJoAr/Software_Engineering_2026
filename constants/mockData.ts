@@ -21,7 +21,7 @@ export const MOCK_EVENTS: CampusEvent[] = [
   {
     id: '1',
     title: 'Welcome Party – New Students 2025',
-    date: '2025-04-18',
+    date: '2026-06-08',
     time: '20:00',
     endTime: '02:00',
     location: 'Rambla del Poblenou, 25 – Terrace',
@@ -40,7 +40,7 @@ export const MOCK_EVENTS: CampusEvent[] = [
   {
     id: '2',
     title: 'UPF Football Tournament',
-    date: '2025-04-22',
+    date: '2026-06-12',
     time: '10:00',
     endTime: '18:00',
     location: 'Sports Complex – Diagonal Mar',
@@ -59,7 +59,7 @@ export const MOCK_EVENTS: CampusEvent[] = [
   {
     id: '3',
     title: 'AI Conference: The Future of Intelligence',
-    date: '2025-04-25',
+    date: '2026-06-15',
     time: '09:30',
     endTime: '17:00',
     location: 'Auditori – Mercè Rodoreda Building',
@@ -78,7 +78,7 @@ export const MOCK_EVENTS: CampusEvent[] = [
   {
     id: '4',
     title: 'Debate Club – Weekly Meeting',
-    date: '2025-04-17',
+    date: '2026-06-07',
     time: '18:30',
     endTime: '20:00',
     location: 'Room 52.701 – Jaume I Building',
@@ -97,7 +97,7 @@ export const MOCK_EVENTS: CampusEvent[] = [
   {
     id: '5',
     title: 'Campus Cultural Evening – Flamenco & Jazz',
-    date: '2025-04-30',
+    date: '2026-06-20',
     time: '19:00',
     endTime: '21:30',
     location: 'Auditori Grec – Ciutadella Campus',
@@ -116,7 +116,7 @@ export const MOCK_EVENTS: CampusEvent[] = [
   {
     id: '6',
     title: 'Yoga & Mindfulness Workshop',
-    date: '2025-05-05',
+    date: '2026-06-25',
     time: '08:00',
     endTime: '09:00',
     location: 'Rooftop – Mar Campus',
@@ -135,7 +135,7 @@ export const MOCK_EVENTS: CampusEvent[] = [
   {
     id: '7',
     title: 'Erasmus Info Session – 2025/26',
-    date: '2025-04-29',
+    date: '2026-06-19',
     time: '12:00',
     endTime: '13:30',
     location: 'Room 24.008 – Ciutadella',
@@ -268,72 +268,4 @@ export const MOCK_NEWS: NewsItem[] = [
   },
 ];
 
-export const MOCK_CALENDAR: CalendarEvent[] = [
-  {
-    id: 'c1',
-    title: 'Media Theory',
-    date: '2025-04-14',
-    time: '10:00',
-    endTime: '12:00',
-    location: 'Room 52.S31',
-    type: 'class',
-    subject: 'Media Theory',
-  },
-  {
-    id: 'c2',
-    title: 'Cultural Studies',
-    date: '2025-04-14',
-    time: '15:00',
-    endTime: '17:00',
-    location: 'Room 52.S12',
-    type: 'class',
-    subject: 'Cultural Studies',
-  },
-  {
-    id: 'c3',
-    title: 'Essay submission – Cultural Studies',
-    date: '2025-04-20',
-    time: '23:59',
-    type: 'deadline',
-    subject: 'Cultural Studies',
-  },
-  {
-    id: 'c4',
-    title: 'Midterm Exam – Media Theory',
-    date: '2025-04-24',
-    time: '09:00',
-    endTime: '11:00',
-    location: 'Exam Hall A',
-    type: 'exam',
-    subject: 'Media Theory',
-  },
-  {
-    id: 'c5',
-    title: 'Video Production',
-    date: '2025-04-15',
-    time: '12:00',
-    endTime: '14:00',
-    location: 'Studio Lab B',
-    type: 'class',
-    subject: 'Video Production',
-  },
-  {
-    id: 'c6',
-    title: 'Debate Club Meeting',
-    date: '2025-04-17',
-    time: '18:30',
-    endTime: '20:00',
-    location: 'Room 52.701',
-    type: 'event',
-  },
-  {
-    id: 'c7',
-    title: 'Audiovisual Narratives',
-    date: '2025-04-16',
-    time: '09:00',
-    endTime: '11:00',
-    location: 'Room 24.012',
-    type: 'class',
-    subject: 'Audiovisual Narratives',
-  },
-];
+export const MOCK_CALENDAR: CalendarEvent[] = [];

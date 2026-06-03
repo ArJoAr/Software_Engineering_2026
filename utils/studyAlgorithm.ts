@@ -50,11 +50,8 @@ function minsToTime(mins: number): string {
 }
 
 export function generateStudyPlan(events: CalendarEvent[], config: StudyConfig): DayPlan[] {
-  // Find the earliest date in our events to start the calendar (since we're using mock data)
-  // In a real app, this would be new Date()
-  const dates = events.map(e => new Date(e.date).getTime());
-  const minDate = dates.length > 0 ? new Date(Math.min(...dates)) : new Date();
-  const startDateStr = `${minDate.getFullYear()}-${pad(minDate.getMonth() + 1)}-${pad(minDate.getDate())}`;
+  const today = new Date();
+  const startDateStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
 
   const planDays = getNextNDays(startDateStr, 7);
   const startMins = timeToMins(config.startHour);
