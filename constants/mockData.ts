@@ -1,7 +1,12 @@
-import { CampusEvent, Notification, NewsItem, CalendarEvent } from '../types';
+import type { Student, CampusEvent, Notification, NewsItem, CalendarEvent } from '@/types';
 
-export const CURRENT_USER = {
-  name: 'Aran Josa',
+export const MOCK_STUDENT: Student = {
+  id: 'u123456',
+  username: 'u123456',
+  firstName: 'JOSEP',
+  lastName: 'GARCIA',
+  fullName: 'JOSEP GARCIA MARTÍNEZ',
+  role: 'STUDENT',
   degree: 'Bachelor in Audiovisual Communication',
   faculty: 'Faculty of Communication',
   year: 3,
@@ -12,10 +17,255 @@ export const CURRENT_USER = {
   campus: 'Comunicació-Poblenou',
 };
 
-export const MOCK_EVENTS: CampusEvent[] = [];
+export const MOCK_EVENTS: CampusEvent[] = [
+  {
+    id: '1',
+    title: 'Welcome Party – New Students 2025',
+    date: '2026-06-08',
+    time: '20:00',
+    endTime: '02:00',
+    location: 'Rambla del Poblenou, 25 – Terrace',
+    description:
+      'Kick off the semester with the official UPF welcome party. Meet your classmates, enjoy live music, drinks, and a great atmosphere. This is your chance to connect with the UPF community from day one.',
+    category: 'events',
+    imageUrl:
+      'https://images.pexels.com/photos/1190298/pexels-photo-1190298.jpeg?auto=compress&cs=tinysrgb&w=600',
+    organizer: 'UPF Student Council',
+    capacity: 500,
+    attendees: 342,
+    isFavorited: false,
+    isJoined: false,
+    tags: ['Party', 'Social', 'Welcome'],
+  },
+  {
+    id: '2',
+    title: 'UPF Football Tournament',
+    date: '2026-06-12',
+    time: '10:00',
+    endTime: '18:00',
+    location: 'Sports Complex – Diagonal Mar',
+    description:
+      'Join the inter-faculty football tournament. Teams of 7. Register your team before April 19. All skill levels welcome. Referees, scoreboard, and trophy for the winning team.',
+    category: 'sports',
+    imageUrl:
+      'https://images.pexels.com/photos/47730/the-ball-stadion-football-the-pitch-47730.jpeg?auto=compress&cs=tinysrgb&w=600',
+    organizer: 'UPF Sports Office',
+    capacity: 120,
+    attendees: 84,
+    isFavorited: true,
+    isJoined: true,
+    tags: ['Football', 'Sports', 'Tournament'],
+  },
+  {
+    id: '3',
+    title: 'AI Conference: The Future of Intelligence',
+    date: '2026-06-15',
+    time: '09:30',
+    endTime: '17:00',
+    location: 'Auditori – Mercè Rodoreda Building',
+    description:
+      'International conference featuring researchers and industry leaders discussing artificial intelligence, large language models, ethics in AI, and the impact on society. Certificate of attendance included.',
+    category: 'conference',
+    imageUrl:
+      'https://images.pexels.com/photos/3861958/pexels-photo-3861958.jpeg?auto=compress&cs=tinysrgb&w=600',
+    organizer: 'DTIC – UPF Tech Department',
+    capacity: 250,
+    attendees: 198,
+    isFavorited: false,
+    isJoined: false,
+    tags: ['AI', 'Technology', 'Research', 'Conference'],
+  },
+  {
+    id: '4',
+    title: 'Debate Club – Weekly Meeting',
+    date: '2026-06-07',
+    time: '18:30',
+    endTime: '20:00',
+    location: 'Room 52.701 – Jaume I Building',
+    description:
+      'This week\'s topic: "Should universities be free for all EU citizens?". Open to all UPF students regardless of previous debate experience. Bring your arguments!',
+    category: 'academic',
+    imageUrl:
+      'https://images.pexels.com/photos/1181406/pexels-photo-1181406.jpeg?auto=compress&cs=tinysrgb&w=600',
+    organizer: 'UPF Debate Club',
+    capacity: 40,
+    attendees: 27,
+    isFavorited: false,
+    isJoined: true,
+    tags: ['Debate', 'Club', 'Weekly'],
+  },
+  {
+    id: '5',
+    title: 'Campus Cultural Evening – Flamenco & Jazz',
+    date: '2026-06-20',
+    time: '19:00',
+    endTime: '21:30',
+    location: 'Auditori Grec – Ciutadella Campus',
+    description:
+      'A cultural evening showcasing UPF\'s music and performing arts students. Enjoy flamenco, jazz, and contemporary dance performances in an intimate campus setting.',
+    category: 'culture',
+    imageUrl:
+      'https://images.pexels.com/photos/210922/pexels-photo-210922.jpeg?auto=compress&cs=tinysrgb&w=600',
+    organizer: 'UPF Arts & Culture Society',
+    capacity: 200,
+    attendees: 89,
+    isFavorited: true,
+    isJoined: false,
+    tags: ['Culture', 'Music', 'Performance'],
+  },
+  {
+    id: '6',
+    title: 'Yoga & Mindfulness Workshop',
+    date: '2026-06-25',
+    time: '08:00',
+    endTime: '09:00',
+    location: 'Rooftop – Mar Campus',
+    description:
+      'Start your week right with a free yoga and mindfulness session on campus. Mats provided. Bring comfortable clothes and enjoy the morning views of Barcelona.',
+    category: 'sports',
+    imageUrl:
+      'https://images.pexels.com/photos/317157/pexels-photo-317157.jpeg?auto=compress&cs=tinysrgb&w=600',
+    organizer: 'UPF Wellness Program',
+    capacity: 30,
+    attendees: 18,
+    isFavorited: false,
+    isJoined: false,
+    tags: ['Wellness', 'Yoga', 'Health'],
+  },
+  {
+    id: '7',
+    title: 'Erasmus Info Session – 2025/26',
+    date: '2026-06-19',
+    time: '12:00',
+    endTime: '13:30',
+    location: 'Room 24.008 – Ciutadella',
+    description:
+      'Everything you need to know about applying for an Erasmus exchange for next academic year. Destinations, grants, eligibility, and testimonials from current Erasmus students.',
+    category: 'academic',
+    imageUrl:
+      'https://images.pexels.com/photos/346885/pexels-photo-346885.jpeg?auto=compress&cs=tinysrgb&w=600',
+    organizer: 'International Relations Office',
+    capacity: 80,
+    attendees: 65,
+    isFavorited: false,
+    isJoined: false,
+    tags: ['Erasmus', 'Exchange', 'International'],
+  },
+];
 
-export const MOCK_NOTIFICATIONS: Notification[] = [];
+export const MOCK_NOTIFICATIONS: Notification[] = [
+  {
+    id: 'n1',
+    title: 'Exam schedule published',
+    body: 'The June exam schedule for all courses is now available in Campus Global.',
+    date: '2025-04-13',
+    time: '09:00',
+    type: 'academic',
+    isRead: false,
+  },
+  {
+    id: 'n2',
+    title: 'Welcome Party – Tonight!',
+    body: 'The UPF Welcome Party starts at 20:00. Don\'t forget your student card.',
+    date: '2025-04-13',
+    time: '12:00',
+    type: 'events',
+    isRead: false,
+    relatedEventId: '1',
+  },
+  {
+    id: 'n3',
+    title: 'Library closure – April 18',
+    body: 'All campus libraries will be closed on Friday, April 18 for a national holiday.',
+    date: '2025-04-12',
+    time: '17:00',
+    type: 'announcements',
+    isRead: true,
+  },
+  {
+    id: 'n4',
+    title: 'Assignment deadline reminder',
+    body: 'Your Cultural Studies essay is due on April 20 at 23:59. Submit via Aula Global.',
+    date: '2025-04-12',
+    time: '10:00',
+    type: 'academic',
+    isRead: true,
+  },
+  {
+    id: 'n5',
+    title: 'Football Tournament – Registration open',
+    body: 'Register your team for the UPF Football Tournament before April 19.',
+    date: '2025-04-11',
+    time: '11:30',
+    type: 'events',
+    isRead: true,
+    relatedEventId: '2',
+  },
+  {
+    id: 'n6',
+    title: 'New grant opportunities available',
+    body: 'UPF has published new mobility and research grants for undergraduate students.',
+    date: '2025-04-10',
+    time: '14:00',
+    type: 'academic',
+    isRead: true,
+  },
+  {
+    id: 'n7',
+    title: 'Campus WiFi maintenance',
+    body: 'WiFi services at Poblenou campus will be interrupted Sunday April 20 from 02:00 to 06:00.',
+    date: '2025-04-10',
+    time: '09:00',
+    type: 'announcements',
+    isRead: true,
+  },
+];
 
-export const MOCK_NEWS: NewsItem[] = [];
+export const MOCK_NEWS: NewsItem[] = [
+  {
+    id: 'news1',
+    title: 'UPF ranks among top 200 universities in Europe',
+    summary:
+      'Universitat Pompeu Fabra has climbed to position 187 in the QS European University Rankings, consolidating its position as one of Spain\'s leading research universities.',
+    date: '2025-04-11',
+    category: 'Rankings',
+    imageUrl:
+      'https://images.pexels.com/photos/267885/pexels-photo-267885.jpeg?auto=compress&cs=tinysrgb&w=600',
+    source: 'UPF News',
+  },
+  {
+    id: 'news2',
+    title: 'New AI research lab opens at DTIC faculty',
+    summary:
+      'The new Applied Artificial Intelligence Lab is now operational, hosting over 40 researchers and three ERC-funded projects focused on machine learning and human-computer interaction.',
+    date: '2025-04-09',
+    category: 'Research',
+    imageUrl:
+      'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=600',
+    source: 'UPF Research',
+  },
+  {
+    id: 'news3',
+    title: 'UPF graduates win national short film award',
+    summary:
+      'A team of Communication graduates won first prize at the Gaudí Short Film Festival with their documentary about urban migration in Barcelona\'s Eixample district.',
+    date: '2025-04-07',
+    category: 'Students',
+    imageUrl:
+      'https://images.pexels.com/photos/7991579/pexels-photo-7991579.jpeg?auto=compress&cs=tinysrgb&w=600',
+    source: 'Faculty of Communication',
+  },
+  {
+    id: 'news4',
+    title: 'UPF signs agreement with MIT Media Lab',
+    summary:
+      'A new collaboration framework with MIT Media Lab will enable joint research programs and student exchange opportunities starting from the 2025/26 academic year.',
+    date: '2025-04-04',
+    category: 'International',
+    imageUrl:
+      'https://images.pexels.com/photos/1454360/pexels-photo-1454360.jpeg?auto=compress&cs=tinysrgb&w=600',
+    source: 'UPF International',
+  },
+];
 
 export const MOCK_CALENDAR: CalendarEvent[] = [];
