@@ -121,7 +121,7 @@ export default function HomeScreen() {
                 />
                 <View style={styles.editBadge}>
                   <Pencil size={9} color="#fff" />
-                  <Text style={styles.editBadgeText}>Edit Avatar</Text>
+                  <Text style={styles.editBadgeText}>Fabri ✏️</Text>
                 </View>
               </>
             ) : (
