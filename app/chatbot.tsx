@@ -136,13 +136,12 @@ export default function ChatbotScreen() {
               if (Platform.OS === 'web') {
                 const res = await fetch(file.uri);
                 const arrayBuffer = await res.arrayBuffer();
+                // eslint-disable-next-line import/no-unresolved
                 const pdfjs = await import('pdfjs-dist/legacy/build/pdf');
                 const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
                 let text = '';
                 for (let i = 1; i <= pdf.numPages; i++) {
-                  // eslint-disable-next-line no-await-in-loop
                   const page = await pdf.getPage(i);
-                  // eslint-disable-next-line no-await-in-loop
                   const contentItems = await page.getTextContent();
                   const pageText = contentItems.items.map((it: any) => (it.str ? it.str : '')).join(' ');
                   text += pageText + '\n\n';
@@ -161,7 +160,7 @@ export default function ChatbotScreen() {
             // Other binary/doc types: we don't extract in-app currently
             content = `[File: ${name}]`;
           }
-        } catch (readError) {
+        } catch {
           content = `[Unable to read file: ${name}]`;
         }
 

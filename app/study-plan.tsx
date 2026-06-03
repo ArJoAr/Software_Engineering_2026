@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Check, Clock } from 'lucide-react-native';
+import { ArrowLeft, Check } from 'lucide-react-native';
 import { useEvents } from '@/context/EventContext';
 import { Colors } from '@/constants/colors';
 import { useTheme } from '@/context/ThemeContext';

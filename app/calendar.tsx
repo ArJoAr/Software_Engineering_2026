@@ -37,7 +37,6 @@ import {
 } from 'lucide-react-native';
 import { Colors, ColorTheme } from '@/constants/colors';
 import { useTheme } from '@/context/ThemeContext';
-import { MOCK_CALENDAR } from '@/constants/mockData';
 import type { CalendarEvent } from '@/types';
 import { useEvents } from '@/context/EventContext';
 
@@ -53,15 +52,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface TypeStyleConfig { color: string; bg: string; label: string }
 
-const TYPE_STYLES: Record<string, TypeStyleConfig> = {
-  class:    { color: Colors.info,                    bg: Colors.infoLight,      label: 'Class' },
-  exam:     { color: Colors.primaryRed,              bg: Colors.primaryRedLight, label: 'Exam' },
-  deadline: { color: Colors.warning,                 bg: Colors.warningLight,   label: 'Deadline' },
-  event:    { color: Colors.categoryColors.events,   bg: Colors.categoryBg.events, label: 'Event' },
+const getTypeStyles = (colors: any): Record<string, TypeStyleConfig> => ({
+  class:    { color: colors.info,                    bg: colors.infoLight,      label: 'Class' },
+  exam:     { color: colors.primaryRed,              bg: colors.primaryRedLight, label: 'Exam' },
+  deadline: { color: colors.warning,                 bg: colors.warningLight,   label: 'Deadline' },
+  event:    { color: colors.textSecondary,           bg: colors.card,           label: 'Event' },
   google:   { color: '#4285F4',                      bg: '#E8F0FE',             label: 'Google Sync' },
   upf:      { color: '#003B46',                      bg: '#E6F0F2',             label: 'UPF Sync' },
-  study:    { color: Colors.success,                 bg: '#E8F5E9',             label: 'Study Plan' },
-};
+  study:    { color: colors.success,                 bg: '#E8F5E9',             label: 'Study Plan' },
+});
 
 const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTHS = [
@@ -149,13 +148,10 @@ function parseICSString(text: string): CalendarEvent[] {
 
 // ─── EventItem ───────────────────────────────────────────────────────────────
 
-function EventItem({ event, colors }: { event: CalendarEvent; colors: ColorTheme }) {
-  const styles    = useMemo(() => makeStyles(colors), [colors]);
+function EventItem({ event, onDelete, colors }: { event: CalendarEvent; onDelete: (id: string) => void; colors: ColorTheme }) {
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const typeStyles = getTypeStyles(colors);
   const cfg = typeStyles[event.type] ?? typeStyles.event;
-
-function EventItem({ event, onDelete }: { event: CalendarEvent; onDelete: (id: string) => void }) {
-  const cfg = TYPE_STYLES[event.type] ?? TYPE_STYLES.event;
   return (
     <View style={styles.eventItem}>
       <View style={[styles.eventStripe, { backgroundColor: cfg.color }]} />
@@ -668,7 +664,7 @@ export default function CalendarScreen() {
             <Text style={styles.emptyText}>No scheduled events for this day.</Text>
           </View>
         ) : (
-          dayEvents.map((e) => <EventItem key={e.id} event={e} onDelete={handleDeleteEvent} />)
+          dayEvents.map((e) => <EventItem key={e.id} event={e} onDelete={handleDeleteEvent} colors={colors} />)
         )}
       </View>
     </>
@@ -755,7 +751,7 @@ export default function CalendarScreen() {
                 <Text style={styles.emptyText}>No scheduled events for this day.</Text>
               </View>
             ) : (
-              dayEvents.map((e) => <EventItem key={e.id} event={e} onDelete={handleDeleteEvent} />)
+              dayEvents.map((e) => <EventItem key={e.id} event={e} onDelete={handleDeleteEvent} colors={colors} />)
             )}
           </View>
         )}

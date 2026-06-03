@@ -14,7 +14,6 @@ import {
   FileText,
   GraduationCap,
   ChevronRight,
-  TrendingUp,
   ClipboardList,
   Award,
   Users,
