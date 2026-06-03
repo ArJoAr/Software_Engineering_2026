@@ -13,25 +13,28 @@ import {
   CalendarDays,
   BookOpen,
   Gift,
-  ChevronRight,
   Bell,
   Ticket,
+  Pencil,
+  Sparkles,
   MessageCircle,
+  ChevronRight,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { QuickAccessCard } from '@/components/QuickAccessCard';
+import { AvatarPreview } from '@/components/AvatarPreview';
 import { MOCK_EVENTS } from '@/constants/mockData';
 import { EventCard } from '@/components/EventCard';
 
 const QUICK_ACCESS = [
-  { id: 'student-id', title: 'My Student ID', icon: CreditCard, route: '/student-id', color: Colors.primaryRed },
-  { id: 'calendar', title: 'My Calendar', icon: CalendarDays, route: '/calendar', color: Colors.info },
-  { id: 'academics', title: 'Academics', icon: BookOpen, route: '/academic', color: Colors.academic },
-  { id: 'chatbot', title: 'Chatbot', icon: MessageCircle, route: '/chatbot', color: Colors.warning },
-  { id: 'benefits', title: 'UPF Benefits', icon: Gift, route: '/highlights', color: Colors.success },
-  { id: 'events', title: 'Campus Events', icon: Ticket, route: '/events', color: Colors.categoryColors.events },
+  { id: 'student-id', title: 'Student ID',     icon: CreditCard,   route: '/student-id',  color: Colors.primaryRed },
+  { id: 'calendar',   title: 'Calendar',        icon: CalendarDays, route: '/calendar',    color: Colors.info },
+  { id: 'academics',  title: 'Academics',       icon: BookOpen,     route: '/academic',    color: Colors.academic },
+  { id: 'benefits',   title: 'Benefits',        icon: Gift,         route: '/highlights',  color: Colors.success },
+  { id: 'events',     title: 'Events',          icon: Ticket,       route: '/events',      color: Colors.categoryColors.events },
+  { id: 'news',       title: 'News',            icon: Bell,         route: '/news',        color: Colors.warning },
 ];
 
 export default function HomeScreen() {
@@ -40,6 +43,7 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
+  const hasAvatar = !!student?.monster3D?.style;
   const featuredEvents = MOCK_EVENTS.slice(0, 3);
 
   return (
@@ -48,6 +52,7 @@ export default function HomeScreen() {
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
+      {/* ── Header ── */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <View style={styles.headerBrand}>
@@ -70,31 +75,88 @@ export default function HomeScreen() {
               <Bell size={20} color="#fff" />
               <View style={styles.bellDot} />
             </TouchableOpacity>
-
           </View>
         </View>
 
-        <TouchableOpacity style={styles.welcomeCard} onPress={() => router.push('/profile')} activeOpacity={0.85}>
-          {student?.photoUrl ? (
-            <Image source={{ uri: student.photoUrl }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, { backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' }]}>
-              <Text style={{ fontSize: 24, color: '#fff', fontWeight: 'bold' }}>
-                {student?.firstName?.[0]?.toUpperCase() || 'U'}
-              </Text>
-            </View>
-          )}
-          <View style={styles.welcomeText}>
-            <Text style={styles.welcomeGreet}>Hello, {student?.firstName ?? 'Student'}</Text>
-            <Text style={styles.welcomeRole}>
-              {student?.role}{student?.role !== 'TEACHER' && student?.degree ? ` · ${student.degree.split(' ').slice(0, 3).join(' ')}` : ''}
+        {/* ── Welcome card: left = user info | right = 3D avatar ── */}
+        <View style={styles.welcomeCard}>
+
+          {/* Left half — tap → profile */}
+          <TouchableOpacity style={styles.welcomeLeft} onPress={() => router.push('/profile')} activeOpacity={0.8}>
+            {student?.photoUrl ? (
+              <Image source={{ uri: student.photoUrl }} style={styles.userPhoto} />
+            ) : (
+              <View style={[styles.userPhoto, styles.userPhotoFallback]}>
+                <Text style={styles.userPhotoInitial}>
+                  {student?.firstName?.[0]?.toUpperCase() || 'U'}
+                </Text>
+              </View>
+            )}
+            <Text style={styles.welcomeGreet} numberOfLines={1}>
+              {student?.firstName ?? 'Student'}
             </Text>
-            <Text style={styles.welcomeEmail}>{student?.email}</Text>
+            <Text style={styles.welcomeRole} numberOfLines={1}>
+              {student?.role ?? ''}
+            </Text>
+            <Text style={styles.welcomeEmail} numberOfLines={2}>
+              {student?.email ?? ''}
+            </Text>
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.welcomeDivider} />
+
+          {/* Right half — tap → avatar studio */}
+          <TouchableOpacity
+            style={styles.welcomeRight}
+            onPress={() => router.push('/avatar' as any)}
+            activeOpacity={0.8}
+          >
+            {hasAvatar ? (
+              <>
+                <AvatarPreview
+                  config={student!.monster3D!}
+                  size={90}
+                  bgColor="rgba(255,255,255,0.1)"
+                />
+                <View style={styles.editBadge}>
+                  <Pencil size={9} color="#fff" />
+                  <Text style={styles.editBadgeText}>Edit Avatar</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.avatarCTA}>
+                  <Sparkles size={28} color="rgba(255,255,255,0.7)" />
+                </View>
+                <Text style={styles.avatarCTATitle}>My Avatar</Text>
+                <Text style={styles.avatarCTASub}>Tap to create</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+        </View>
+      </View>
+
+      {/* ── Chatbot featured card ── */}
+      <View style={styles.section}>
+        <TouchableOpacity
+          style={styles.chatbotCard}
+          onPress={() => router.push('/chatbot')}
+          activeOpacity={0.88}
+        >
+          <View style={styles.chatbotIconWrap}>
+            <MessageCircle size={26} color="#fff" fill="rgba(255,255,255,0.25)" />
           </View>
-          <ChevronRight size={20} color="rgba(255,255,255,0.7)" />
+          <View style={styles.chatbotText}>
+            <Text style={styles.chatbotTitle}>UPF Assistant</Text>
+            <Text style={styles.chatbotSub}>Ask anything about campus, courses or services</Text>
+          </View>
+          <ChevronRight size={18} color="rgba(255,255,255,0.6)" />
         </TouchableOpacity>
       </View>
 
+      {/* ── Quick Access grid (3 columns) ── */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Access</Text>
         <View style={styles.grid}>
@@ -104,7 +166,7 @@ export default function HomeScreen() {
               <View key={item.id} style={styles.gridItem}>
                 <QuickAccessCard
                   title={item.title}
-                  icon={<IconComp size={22} color={item.color} />}
+                  icon={<IconComp size={20} color={item.color} />}
                   onPress={() => router.push(item.route as any)}
                   accentColor={item.color}
                 />
@@ -114,6 +176,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
+      {/* ── Upcoming Events ── */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Upcoming Events</Text>
@@ -137,8 +200,9 @@ export default function HomeScreen() {
 
 const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  content: { paddingBottom: 20 },
+  content: { paddingBottom: 24 },
 
+  // ── Header ──────────────────────────────────────────────
   header: {
     backgroundColor: colors.primaryRed,
     paddingTop: 56,
@@ -149,71 +213,130 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   headerBrand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   logoBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 36, height: 36, borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.4)',
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)',
   },
-  logoText: { fontSize: 13, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
+  logoText:    { fontSize: 13, fontWeight: '800', color: '#fff', letterSpacing: 0.5 },
   headerTitle: { fontSize: 16, fontWeight: '700', color: '#fff' },
-  headerSub: { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 1 },
+  headerSub:   { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 1 },
   headerActions: { flexDirection: 'row', gap: 8 },
   headerIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 36, height: 36, borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
   },
   headerIconBell: { position: 'relative' },
   bellDot: {
-    position: 'absolute',
-    top: 7,
-    right: 7,
-    width: 7,
-    height: 7,
-    borderRadius: 4,
+    position: 'absolute', top: 7, right: 7,
+    width: 7, height: 7, borderRadius: 4,
     backgroundColor: '#FFD700',
-    borderWidth: 1,
-    borderColor: colors.primaryRed,
+    borderWidth: 1, borderColor: colors.primaryRed,
   },
 
+  // ── Welcome card ────────────────────────────────────────
   welcomeCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 16,
-    padding: 14,
-    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.13)',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: 'rgba(255,255,255,0.22)',
+    overflow: 'hidden',
+    minHeight: 148,
   },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.5)',
+  welcomeLeft: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+    gap: 3,
   },
-  welcomeText: { flex: 1 },
-  welcomeGreet: { fontSize: 16, fontWeight: '700', color: '#fff' },
-  welcomeRole: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 1 },
-  welcomeEmail: { fontSize: 11, color: 'rgba(255,255,255,0.55)', marginTop: 1 },
+  userPhoto: {
+    width: 54, height: 54, borderRadius: 27,
+    borderWidth: 2, borderColor: 'rgba(255,255,255,0.6)',
+    marginBottom: 6,
+  },
+  userPhotoFallback: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  userPhotoInitial: { fontSize: 22, color: '#fff', fontWeight: '700' },
+  welcomeGreet: { fontSize: 14, fontWeight: '700', color: '#fff', textAlign: 'center' },
+  welcomeRole:  { fontSize: 11, color: 'rgba(255,255,255,0.7)', textAlign: 'center' },
+  welcomeEmail: { fontSize: 10, color: 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 14 },
 
-  section: { padding: 20, paddingBottom: 0 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  welcomeDivider: {
+    width: 1,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    marginVertical: 18,
+  },
+
+  welcomeRight: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  editBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.28)',
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12,
+  },
+  editBadgeText: { fontSize: 10, color: '#fff', fontWeight: '600' },
+  avatarCTA: {
+    width: 72, height: 72, borderRadius: 36,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)',
+    borderStyle: 'dashed',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  avatarCTATitle: { fontSize: 13, fontWeight: '700', color: '#fff' },
+  avatarCTASub:   { fontSize: 11, color: 'rgba(255,255,255,0.55)' },
+
+  // ── Chatbot featured card ────────────────────────────────
+  chatbotCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primaryRedDark,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 12,
+    shadowColor: colors.primaryRed,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  chatbotIconWrap: {
+    width: 44, height: 44, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
+  },
+  chatbotText: { flex: 1 },
+  chatbotTitle: { fontSize: 15, fontWeight: '700', color: '#fff', marginBottom: 2 },
+  chatbotSub:   { fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 17 },
+
+  // ── Sections & grid ─────────────────────────────────────
+  section: { paddingHorizontal: 20, paddingTop: 20 },
+  sectionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    alignItems: 'center', marginBottom: 14,
+  },
   sectionTitle: { fontSize: 17, fontWeight: '700', color: colors.textPrimary, marginBottom: 14 },
-  sectionLink: { fontSize: 14, color: colors.primaryRed, fontWeight: '600' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  gridItem: { width: '47%' },
-  bottomPad: { height: 20 },
+  sectionLink:  { fontSize: 14, color: colors.primaryRed, fontWeight: '600' },
+
+  grid:     { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  gridItem: { width: '30.5%' },
+
+  bottomPad: { height: 24 },
 });
