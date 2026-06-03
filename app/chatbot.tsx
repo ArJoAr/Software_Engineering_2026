@@ -137,7 +137,11 @@ export default function ChatbotScreen() {
                 const res = await fetch(file.uri);
                 const arrayBuffer = await res.arrayBuffer();
                 // eslint-disable-next-line import/no-unresolved
-                const pdfjs = await import('pdfjs-dist/legacy/build/pdf');
+                const pdfjs = await import('pdfjs-dist');
+                // Ensure the worker is set up for web
+                if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+                  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+                }
                 const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
                 let text = '';
                 for (let i = 1; i <= pdf.numPages; i++) {
