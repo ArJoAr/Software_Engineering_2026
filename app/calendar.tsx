@@ -134,7 +134,7 @@ function parseICSString(text: string): CalendarEvent[] {
         id: 'upf-' + Math.random().toString(36).slice(2, 9),
         title,
         date: eventDate,
-        startTime: eventTime,
+        time: eventTime,
         endTime: eventEndTime,
         location: locationMatch ? locationMatch[1].replace(/\\,/g, ',').trim() : undefined,
         type: isExam ? 'exam' : 'upf',
@@ -169,7 +169,7 @@ function EventItem({ event, colors }: { event: CalendarEvent; colors: ColorTheme
           <View style={styles.metaItem}>
             <Clock size={11} color={colors.textTertiary} />
             <Text style={styles.metaText}>
-              {event.startTime}{event.endTime ? ` – ${event.endTime}` : ''}
+              {event.time}{event.endTime ? ` – ${event.endTime}` : ''}
             </Text>
           </View>
           {event.location && (
@@ -248,7 +248,7 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd, colors }: AddEven
       id: genId(),
       title: title.trim(),
       date: date.trim(),
-      startTime: time.trim(),
+      time: time.trim(),
       endTime: endTime.trim() || undefined,
       location: location.trim() || undefined,
       subject: subject.trim() || undefined,
@@ -464,7 +464,7 @@ export default function CalendarScreen() {
               id: e.id,
               title: e.summary || 'No Title',
               date: start.split('T')[0],
-              startTime: e.start.dateTime ? start.split('T')[1].slice(0, 5) : '00:00',
+              time: e.start.dateTime ? start.split('T')[1].slice(0, 5) : '00:00',
               endTime:   e.end?.dateTime  ? end.split('T')[1].slice(0, 5)   : undefined,
               location: e.location || undefined,
               type: 'google',
@@ -519,7 +519,7 @@ export default function CalendarScreen() {
   const monthCells  = getDaysInMonth(monthBase.getFullYear(), monthBase.getMonth());
   const dayEvents   = events
     .filter((e) => e.date === selectedStr)
-    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+    .sort((a, b) => a.time.localeCompare(b.time));
 
   // ── Handlers ────────────────────────────────────────────────────────────────
   const handleAddEvent = (ev: CalendarEvent) => setEvents((prev) => [...prev, ev]);
