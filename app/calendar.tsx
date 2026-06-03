@@ -61,6 +61,7 @@ const TYPE_STYLES: Record<string, TypeStyleConfig> = {
   exam:     { color: Colors.primaryRed,              bg: Colors.primaryRedLight, label: 'Exam' },
   deadline: { color: Colors.warning,                 bg: Colors.warningLight,   label: 'Deadline' },
   event:    { color: Colors.categoryColors.events,   bg: Colors.categoryBg.events, label: 'Event' },
+  study:    { color: Colors.academic,                bg: Colors.academicLight,  label: 'Study Plan' },
   google:   { color: '#4285F4',                      bg: '#E8F0FE',             label: 'Google Sync' },
   upf:      { color: '#003B46',                      bg: '#E6F0F2',             label: 'UPF Sync' },
 };
@@ -213,7 +214,7 @@ function EventItem({ event, colors }: { event: CalendarEvent; colors: typeof Col
 
 // ─── Add Event Modal ──────────────────────────────────────────────────────────
 
-type EventType = 'class' | 'exam' | 'deadline' | 'event';
+type EventType = 'class' | 'exam' | 'deadline' | 'event' | 'study';
 
 interface AddEventModalProps {
   visible: boolean;
@@ -294,7 +295,7 @@ function AddEventModal({ visible, defaultDate, onClose, onAdd, colors }: AddEven
 
   const handleClose = () => { reset(); onClose(); };
 
-  const allowedKeys: EventType[] = ['class', 'exam', 'deadline', 'event'];
+  const allowedKeys: EventType[] = ['class', 'exam', 'deadline', 'event', 'study'];
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={handleClose}>
