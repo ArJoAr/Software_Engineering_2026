@@ -19,6 +19,7 @@ import {
   Sparkles,
   MessageCircle,
   ChevronRight,
+  ClipboardList,
 } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useTheme } from '@/context/ThemeContext';
@@ -153,6 +154,24 @@ export default function HomeScreen() {
             <Text style={styles.chatbotSub}>Ask anything about campus, courses or services</Text>
           </View>
           <ChevronRight size={18} color="rgba(255,255,255,0.6)" />
+        </TouchableOpacity>
+      </View>
+
+      {/* ── AI Planner featured card ── */}
+      <View style={styles.plannerSection}>
+        <TouchableOpacity
+          style={styles.plannerCard}
+          onPress={() => router.push('/todo' as any)}
+          activeOpacity={0.88}
+        >
+          <View style={styles.plannerIconWrap}>
+            <ClipboardList size={26} color="#fff" />
+          </View>
+          <View style={styles.plannerText}>
+            <Text style={styles.plannerTitle}>AI Planner</Text>
+            <Text style={styles.plannerSub}>Exams, tasks & deadlines in one place</Text>
+          </View>
+          <ChevronRight size={18} color="rgba(88,86,214,0.5)" />
         </TouchableOpacity>
       </View>
 
@@ -325,6 +344,29 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   chatbotText: { flex: 1 },
   chatbotTitle: { fontSize: 15, fontWeight: '700', color: '#fff', marginBottom: 2 },
   chatbotSub:   { fontSize: 12, color: 'rgba(255,255,255,0.65)', lineHeight: 17 },
+
+  // ── AI Planner card ─────────────────────────────────────
+  plannerSection: { paddingHorizontal: 20, paddingTop: 10 },
+  plannerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.academicLight,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 12,
+    borderWidth: 1.5,
+    borderColor: colors.academic + '40',
+  },
+  plannerIconWrap: {
+    width: 44, height: 44, borderRadius: 12,
+    backgroundColor: colors.academic,
+    alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
+  },
+  plannerText: { flex: 1 },
+  plannerTitle: { fontSize: 15, fontWeight: '700', color: colors.academic, marginBottom: 2 },
+  plannerSub:   { fontSize: 12, color: colors.textSecondary, lineHeight: 17 },
 
   // ── Sections & grid ─────────────────────────────────────
   section: { paddingHorizontal: 20, paddingTop: 20 },

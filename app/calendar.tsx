@@ -31,6 +31,7 @@ import {
   Chrome,
   KeyRound,
   CalendarDays,
+  ListTodo,
   FileDown,
   Home,
   Trash2,
@@ -183,14 +184,9 @@ function EventItem({ event, colors }: { event: CalendarEvent; colors: typeof Col
           <View style={[styles.typePill, { backgroundColor: cfg.bg }]}>
             <Text style={[styles.typePillText, { color: cfg.color }]}>{cfg.label}</Text>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            {event.subject && (
-              <Text style={styles.subject} numberOfLines={1}>{event.subject}</Text>
-            )}
-            <TouchableOpacity onPress={() => onDelete(event.id)}>
-              <Trash2 size={16} color={Colors.textTertiary} />
-            </TouchableOpacity>
-          </View>
+          {event.subject && (
+            <Text style={styles.subject} numberOfLines={1}>{event.subject}</Text>
+          )}
         </View>
         <Text style={styles.eventTitle}>{event.title}</Text>
         <View style={styles.eventMeta}>
@@ -726,6 +722,13 @@ export default function CalendarScreen() {
               {isUPFConnected ? '✓ UPF Calendar Connected' : 'Sync UPF Secretaría Virtual'}
             </Text>
           )}
+        </TouchableOpacity>
+
+        {/* AI Planner shortcut */}
+        <TouchableOpacity style={styles.plannerShortcut} onPress={() => router.push('/todo' as any)}>
+          <ListTodo size={15} color={colors.academic} />
+          <Text style={styles.plannerShortcutText}>AI Planner — tasks & deadlines</Text>
+          <ChevronRight size={14} color={colors.academic} />
         </TouchableOpacity>
 
         {/* Toggles */}
@@ -1369,9 +1372,28 @@ const makeStyles = (colors: typeof Colors) => StyleSheet.create({
   addBtnDisabled: { 
     opacity: 0.5 
   },
-  addBtnText: { 
-    fontSize: 15, 
-    fontWeight: '700', 
-    color: '#fff' 
+  addBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#fff'
+  },
+  plannerShortcut: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    backgroundColor: colors.academicLight,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.academic + '30',
+  },
+  plannerShortcutText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.academic,
   },
 });
